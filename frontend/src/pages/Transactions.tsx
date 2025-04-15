@@ -1,8 +1,8 @@
+import { PencilIcon, PlusIcon, TrashIcon } from '@heroicons/react/24/outline';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useState } from 'react';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { PlusIcon, PencilIcon, TrashIcon } from '@heroicons/react/24/outline';
+import categoryService from '../services/categoryService';
 import transactionService, { Transaction } from '../services/transactionService';
-import categoryService, { Category } from '../services/categoryService';
 
 interface TransactionFormData {
   id?: number;
@@ -25,19 +25,19 @@ const Transactions = () => {
   });
   const [isEditing, setIsEditing] = useState(false);
 
-  // Buscar transações
+  // Fetch transactions
   const { data: transactions, isLoading: transactionsLoading } = useQuery({
     queryKey: ['transactions'],
     queryFn: transactionService.getAll
   });
 
-  // Buscar categorias
+  // Fetch categories
   const { data: categories, isLoading: categoriesLoading } = useQuery({
     queryKey: ['categories'],
     queryFn: categoryService.getAll
   });
 
-  // Mutação para criar transação
+  // Mutation to create transaction
   const createMutation = useMutation({
     mutationFn: transactionService.create,
     onSuccess: () => {
@@ -46,9 +46,9 @@ const Transactions = () => {
     }
   });
 
-  // Mutação para atualizar transação
+  // Mutation to update transaction
   const updateMutation = useMutation({
-    mutationFn: (transaction: Transaction) => 
+    mutationFn: (transaction: Transaction) =>
       transactionService.update(transaction.id!, transaction),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['transactions'] });
@@ -56,7 +56,7 @@ const Transactions = () => {
     }
   });
 
-  // Mutação para excluir transação
+  // Mutation to delete transaction
   const deleteMutation = useMutation({
     mutationFn: transactionService.delete,
     onSuccess: () => {
@@ -102,7 +102,7 @@ const Transactions = () => {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (isEditing && currentTransaction.id) {
       updateMutation.mutate(currentTransaction as Transaction);
     } else {
@@ -111,7 +111,7 @@ const Transactions = () => {
   };
 
   const handleDelete = (id: number) => {
-    if (window.confirm('Tem certeza que deseja excluir esta transação?')) {
+    if (window.confirm('Are you sure you want to delete this transaction?')) {
       deleteMutation.mutate(id);
     }
   };
@@ -135,17 +135,17 @@ const Transactions = () => {
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
-        <h1 className="text-2xl font-semibold text-gray-900">Transações</h1>
+        <h1 className="text-2xl font-semibold text-gray-900">Transactions</h1>
         <button
           onClick={() => handleOpenModal()}
           className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
         >
           <PlusIcon className="h-5 w-5 mr-2" />
-          Nova Transação
+          New Transaction
         </button>
       </div>
 
-      {/* Lista de transações */}
+      {/* Transaction list */}
       <div className="bg-white shadow overflow-hidden sm:rounded-md">
         <ul className="divide-y divide-gray-200">
           {transactions && transactions.length > 0 ? (
@@ -158,7 +158,7 @@ const Transactions = () => {
                       {new Date(transaction.date).toLocaleDateString()}
                     </p>
                     <p className="text-sm text-gray-500">
-                      Categoria: {categories?.find(c => c.id === transaction.categoryId)?.name || 'N/A'}
+                      Category: {categories?.find(c => c.id === transaction.categoryId)?.name || 'N/A'}
                     </p>
                   </div>
                   <div className="flex items-center space-x-4">
@@ -185,24 +185,24 @@ const Transactions = () => {
             ))
           ) : (
             <li className="px-4 py-4 sm:px-6 text-center text-gray-500">
-              Nenhuma transação encontrada
+              No transactions found
             </li>
           )}
         </ul>
       </div>
 
-      {/* Modal de formulário */}
+      {/* Form modal */}
       {isModalOpen && (
         <div className="fixed inset-0 bg-gray-500 bg-opacity-75 flex items-center justify-center p-4 z-50">
           <div className="bg-white rounded-lg shadow-xl max-w-md w-full p-6">
             <h2 className="text-lg font-medium text-gray-900 mb-4">
-              {isEditing ? 'Editar Transação' : 'Nova Transação'}
+              {isEditing ? 'Edit Transaction' : 'New Transaction'}
             </h2>
-            
+
             <form onSubmit={handleSubmit} className="space-y-4">
               <div>
                 <label htmlFor="description" className="block text-sm font-medium text-gray-700">
-                  Descrição
+                  Description
                 </label>
                 <input
                   type="text"
@@ -214,10 +214,10 @@ const Transactions = () => {
                   className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
                 />
               </div>
-              
+
               <div>
                 <label htmlFor="amount" className="block text-sm font-medium text-gray-700">
-                  Valor
+                  Amount
                 </label>
                 <input
                   type="number"
@@ -231,10 +231,10 @@ const Transactions = () => {
                   className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
                 />
               </div>
-              
+
               <div>
                 <label htmlFor="date" className="block text-sm font-medium text-gray-700">
-                  Data
+                  Date
                 </label>
                 <input
                   type="date"
@@ -246,10 +246,10 @@ const Transactions = () => {
                   className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
                 />
               </div>
-              
+
               <div>
                 <label htmlFor="type" className="block text-sm font-medium text-gray-700">
-                  Tipo
+                  Type
                 </label>
                 <select
                   name="type"
@@ -259,14 +259,14 @@ const Transactions = () => {
                   onChange={handleInputChange}
                   className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
                 >
-                  <option value="INCOME">Receita</option>
-                  <option value="EXPENSE">Despesa</option>
+                  <option value="INCOME">Income</option>
+                  <option value="EXPENSE">Expense</option>
                 </select>
               </div>
-              
+
               <div>
                 <label htmlFor="categoryId" className="block text-sm font-medium text-gray-700">
-                  Categoria
+                  Category
                 </label>
                 <select
                   name="categoryId"
@@ -276,7 +276,7 @@ const Transactions = () => {
                   onChange={handleInputChange}
                   className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
                 >
-                  <option value="">Selecione uma categoria</option>
+                  <option value="">Select a category</option>
                   {categories?.map(category => (
                     <option key={category.id} value={category.id}>
                       {category.name}
@@ -284,20 +284,20 @@ const Transactions = () => {
                   ))}
                 </select>
               </div>
-              
+
               <div className="flex justify-end space-x-3 pt-4">
                 <button
                   type="button"
                   onClick={resetForm}
                   className="inline-flex justify-center py-2 px-4 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
                 >
-                  Cancelar
+                  Cancel
                 </button>
                 <button
                   type="submit"
                   className="inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
                 >
-                  {isEditing ? 'Atualizar' : 'Salvar'}
+                  {isEditing ? 'Update' : 'Save'}
                 </button>
               </div>
             </form>

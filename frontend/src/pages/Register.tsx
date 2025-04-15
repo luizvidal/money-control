@@ -16,15 +16,15 @@ const Register = () => {
     setError('');
 
     if (password !== confirmPassword) {
-      setError('As senhas não coincidem');
+      setError('Passwords do not match');
       return;
     }
 
     try {
       await register({ name, email, password });
-      navigate('/login', { state: { message: 'Registro realizado com sucesso! Faça login para continuar.' } });
+      navigate('/login', { state: { message: 'Registration successful! Please sign in to continue.' } });
     } catch (err: any) {
-      setError(err.response?.data?.message || 'Falha no registro');
+      setError(err.response?.data?.message || 'Registration failed');
     }
   };
 
@@ -33,30 +33,30 @@ const Register = () => {
       <div className="max-w-md w-full space-y-8">
         <div>
           <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
-            Crie sua conta
+            Create your account
           </h2>
           <p className="mt-2 text-center text-sm text-gray-600">
-            Registre-se para começar a controlar suas finanças
+            Register to start controlling your finances
           </p>
         </div>
-        
+
         {error && (
           <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative" role="alert">
             <span className="block sm:inline">{error}</span>
           </div>
         )}
-        
+
         <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
           <div className="rounded-md shadow-sm -space-y-px">
             <div>
-              <label htmlFor="name" className="sr-only">Nome</label>
+              <label htmlFor="name" className="sr-only">Name</label>
               <input
                 id="name"
                 name="name"
                 type="text"
                 required
                 className="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-t-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-sm"
-                placeholder="Nome completo"
+                placeholder="Full name"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
               />
@@ -76,7 +76,7 @@ const Register = () => {
               />
             </div>
             <div>
-              <label htmlFor="password" className="sr-only">Senha</label>
+              <label htmlFor="password" className="sr-only">Password</label>
               <input
                 id="password"
                 name="password"
@@ -84,13 +84,13 @@ const Register = () => {
                 autoComplete="new-password"
                 required
                 className="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-sm"
-                placeholder="Senha"
+                placeholder="Password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
               />
             </div>
             <div>
-              <label htmlFor="confirm-password" className="sr-only">Confirmar Senha</label>
+              <label htmlFor="confirm-password" className="sr-only">Confirm Password</label>
               <input
                 id="confirm-password"
                 name="confirm-password"
@@ -98,7 +98,7 @@ const Register = () => {
                 autoComplete="new-password"
                 required
                 className="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-b-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-sm"
-                placeholder="Confirmar senha"
+                placeholder="Confirm password"
                 value={confirmPassword}
                 onChange={(e) => setConfirmPassword(e.target.value)}
               />
@@ -119,13 +119,13 @@ const Register = () => {
                   </svg>
                 </span>
               ) : null}
-              Registrar
+              Register
             </button>
           </div>
 
           <div className="text-sm text-center">
             <Link to="/login" className="font-medium text-blue-600 hover:text-blue-500">
-              Já tem uma conta? Faça login
+              Already have an account? Sign in
             </Link>
           </div>
         </form>

@@ -1,13 +1,13 @@
+import {
+    ArrowRightStartOnRectangleIcon,
+    ArrowTrendingUpIcon,
+    BanknotesIcon,
+    ChartPieIcon,
+    HomeIcon
+} from '@heroicons/react/24/outline';
 import { ReactNode } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
-import { 
-  HomeIcon, 
-  ChartPieIcon, 
-  BanknotesIcon, 
-  ArrowTrendingUpIcon,
-  ArrowRightStartOnRectangleIcon
-} from '@heroicons/react/24/outline';
 
 interface MainLayoutProps {
   children: ReactNode;
@@ -38,15 +38,15 @@ const MainLayout = ({ children }: MainLayoutProps) => {
               </Link>
               <Link to="/transactions" className="group flex items-center px-2 py-2 text-sm font-medium rounded-md text-gray-600 hover:bg-gray-50 hover:text-gray-900">
                 <BanknotesIcon className="mr-3 h-6 w-6 text-gray-400 group-hover:text-gray-500" />
-                Transações
+                Transactions
               </Link>
               <Link to="/categories" className="group flex items-center px-2 py-2 text-sm font-medium rounded-md text-gray-600 hover:bg-gray-50 hover:text-gray-900">
                 <ChartPieIcon className="mr-3 h-6 w-6 text-gray-400 group-hover:text-gray-500" />
-                Categorias
+                Categories
               </Link>
               <Link to="/goals" className="group flex items-center px-2 py-2 text-sm font-medium rounded-md text-gray-600 hover:bg-gray-50 hover:text-gray-900">
                 <ArrowTrendingUpIcon className="mr-3 h-6 w-6 text-gray-400 group-hover:text-gray-500" />
-                Metas
+                Goals
               </Link>
             </nav>
           </div>
@@ -67,7 +67,7 @@ const MainLayout = ({ children }: MainLayoutProps) => {
                     className="text-xs font-medium text-gray-500 group-hover:text-gray-700 flex items-center"
                   >
                     <ArrowRightStartOnRectangleIcon className="mr-1 h-4 w-4" />
-                    Sair
+                    Logout
                   </button>
                 </div>
               </div>

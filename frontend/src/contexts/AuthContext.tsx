@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import { createContext, ReactNode, useContext, useEffect, useState } from 'react';
 import authService, { LoginCredentials, RegisterData } from '../services/authService';
 
 interface User {
@@ -29,12 +29,12 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     const initAuth = () => {
       const currentUser = authService.getCurrentUser();
       const hasToken = authService.isAuthenticated();
-      
+
       if (currentUser && hasToken) {
         setUser(currentUser);
         setIsAuthenticated(true);
       }
-      
+
       setLoading(false);
     };
 
@@ -53,7 +53,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       });
       setIsAuthenticated(true);
     } catch (err: any) {
-      setError(err.response?.data?.message || 'Falha na autenticação');
+      setError(err.response?.data?.message || 'Authentication failed');
       throw err;
     } finally {
       setLoading(false);
@@ -66,7 +66,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       setError(null);
       await authService.register(data);
     } catch (err: any) {
-      setError(err.response?.data?.message || 'Falha no registro');
+      setError(err.response?.data?.message || 'Registration failed');
       throw err;
     } finally {
       setLoading(false);

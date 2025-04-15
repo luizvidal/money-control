@@ -1,6 +1,6 @@
+import { PencilIcon, PlusIcon, TrashIcon } from '@heroicons/react/24/outline';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useState } from 'react';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { PlusIcon, PencilIcon, TrashIcon } from '@heroicons/react/24/outline';
 import goalService, { Goal } from '../services/goalService';
 
 interface GoalFormData {
@@ -24,13 +24,13 @@ const Goals = () => {
   });
   const [isEditing, setIsEditing] = useState(false);
 
-  // Buscar metas
+  // Fetch goals
   const { data: goals, isLoading } = useQuery({
     queryKey: ['goals'],
     queryFn: goalService.getAll
   });
 
-  // Mutação para criar meta
+  // Mutation to create goal
   const createMutation = useMutation({
     mutationFn: goalService.create,
     onSuccess: () => {
@@ -39,9 +39,9 @@ const Goals = () => {
     }
   });
 
-  // Mutação para atualizar meta
+  // Mutation to update goal
   const updateMutation = useMutation({
-    mutationFn: (goal: Goal) => 
+    mutationFn: (goal: Goal) =>
       goalService.update(goal.id!, goal),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['goals'] });
@@ -49,7 +49,7 @@ const Goals = () => {
     }
   });
 
-  // Mutação para excluir meta
+  // Mutation to delete goal
   const deleteMutation = useMutation({
     mutationFn: goalService.delete,
     onSuccess: () => {
@@ -95,7 +95,7 @@ const Goals = () => {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (isEditing && currentGoal.id) {
       updateMutation.mutate(currentGoal as Goal);
     } else {
@@ -104,7 +104,7 @@ const Goals = () => {
   };
 
   const handleDelete = (id: number) => {
-    if (window.confirm('Tem certeza que deseja excluir esta meta?')) {
+    if (window.confirm('Are you sure you want to delete this goal?')) {
       deleteMutation.mutate(id);
     }
   };
@@ -117,7 +117,7 @@ const Goals = () => {
     }));
   };
 
-  // Calcular progresso da meta
+  // Calculate goal progress
   const calculateProgress = (current: number, target: number) => {
     if (target <= 0) return 0;
     const progress = (current / target) * 100;
@@ -135,23 +135,23 @@ const Goals = () => {
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
-        <h1 className="text-2xl font-semibold text-gray-900">Metas Financeiras</h1>
+        <h1 className="text-2xl font-semibold text-gray-900">Financial Goals</h1>
         <button
           onClick={() => handleOpenModal()}
           className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
         >
           <PlusIcon className="h-5 w-5 mr-2" />
-          Nova Meta
+          New Goal
         </button>
       </div>
 
-      {/* Lista de metas */}
+      {/* Goals list */}
       <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
         {goals && goals.length > 0 ? (
           goals.map((goal) => {
             const progress = calculateProgress(goal.currentAmount, goal.targetAmount);
             const daysLeft = Math.ceil((new Date(goal.targetDate).getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24));
-            
+
             return (
               <div key={goal.id} className="bg-white overflow-hidden shadow rounded-lg">
                 <div className="px-4 py-5 sm:p-6">
@@ -172,14 +172,14 @@ const Goals = () => {
                       </button>
                     </div>
                   </div>
-                  
+
                   {goal.description && (
                     <p className="mt-1 text-sm text-gray-500">{goal.description}</p>
                   )}
-                  
+
                   <div className="mt-4">
                     <div className="flex justify-between text-sm font-medium">
-                      <span>Progresso</span>
+                      <span>Progress</span>
                       <span>{progress.toFixed(0)}%</span>
                     </div>
                     <div className="mt-2 relative">
@@ -193,24 +193,24 @@ const Goals = () => {
                       </div>
                     </div>
                   </div>
-                  
+
                   <div className="mt-4 grid grid-cols-2 gap-4 text-sm">
                     <div>
-                      <span className="block text-gray-500">Meta</span>
+                      <span className="block text-gray-500">Target</span>
                       <span className="block font-medium text-gray-900">R$ {goal.targetAmount.toFixed(2)}</span>
                     </div>
                     <div>
-                      <span className="block text-gray-500">Atual</span>
+                      <span className="block text-gray-500">Current</span>
                       <span className="block font-medium text-gray-900">R$ {goal.currentAmount.toFixed(2)}</span>
                     </div>
                     <div>
-                      <span className="block text-gray-500">Data Alvo</span>
+                      <span className="block text-gray-500">Target Date</span>
                       <span className="block font-medium text-gray-900">{new Date(goal.targetDate).toLocaleDateString()}</span>
                     </div>
                     <div>
-                      <span className="block text-gray-500">Dias Restantes</span>
+                      <span className="block text-gray-500">Days Left</span>
                       <span className={`block font-medium ${daysLeft < 0 ? 'text-red-600' : 'text-gray-900'}`}>
-                        {daysLeft < 0 ? 'Atrasado' : daysLeft}
+                        {daysLeft < 0 ? 'Overdue' : daysLeft}
                       </span>
                     </div>
                   </div>
@@ -220,30 +220,30 @@ const Goals = () => {
           })
         ) : (
           <div className="col-span-full text-center py-12 bg-white rounded-lg shadow">
-            <p className="text-gray-500">Nenhuma meta encontrada</p>
+            <p className="text-gray-500">No goals found</p>
             <button
               onClick={() => handleOpenModal()}
               className="mt-4 inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
             >
               <PlusIcon className="h-5 w-5 mr-2" />
-              Criar sua primeira meta
+              Create your first goal
             </button>
           </div>
         )}
       </div>
 
-      {/* Modal de formulário */}
+      {/* Form modal */}
       {isModalOpen && (
         <div className="fixed inset-0 bg-gray-500 bg-opacity-75 flex items-center justify-center p-4 z-50">
           <div className="bg-white rounded-lg shadow-xl max-w-md w-full p-6">
             <h2 className="text-lg font-medium text-gray-900 mb-4">
-              {isEditing ? 'Editar Meta' : 'Nova Meta'}
+              {isEditing ? 'Edit Goal' : 'New Goal'}
             </h2>
-            
+
             <form onSubmit={handleSubmit} className="space-y-4">
               <div>
                 <label htmlFor="name" className="block text-sm font-medium text-gray-700">
-                  Nome da Meta
+                  Goal Name
                 </label>
                 <input
                   type="text"
@@ -255,10 +255,10 @@ const Goals = () => {
                   className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
                 />
               </div>
-              
+
               <div>
                 <label htmlFor="description" className="block text-sm font-medium text-gray-700">
-                  Descrição (opcional)
+                  Description (optional)
                 </label>
                 <textarea
                   name="description"
@@ -269,10 +269,10 @@ const Goals = () => {
                   className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
                 />
               </div>
-              
+
               <div>
                 <label htmlFor="targetAmount" className="block text-sm font-medium text-gray-700">
-                  Valor Alvo
+                  Target Amount
                 </label>
                 <input
                   type="number"
@@ -286,10 +286,10 @@ const Goals = () => {
                   className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
                 />
               </div>
-              
+
               <div>
                 <label htmlFor="currentAmount" className="block text-sm font-medium text-gray-700">
-                  Valor Atual
+                  Current Amount
                 </label>
                 <input
                   type="number"
@@ -303,10 +303,10 @@ const Goals = () => {
                   className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
                 />
               </div>
-              
+
               <div>
                 <label htmlFor="targetDate" className="block text-sm font-medium text-gray-700">
-                  Data Alvo
+                  Target Date
                 </label>
                 <input
                   type="date"
@@ -318,20 +318,20 @@ const Goals = () => {
                   className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
                 />
               </div>
-              
+
               <div className="flex justify-end space-x-3 pt-4">
                 <button
                   type="button"
                   onClick={resetForm}
                   className="inline-flex justify-center py-2 px-4 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
                 >
-                  Cancelar
+                  Cancel
                 </button>
                 <button
                   type="submit"
                   className="inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
                 >
-                  {isEditing ? 'Atualizar' : 'Salvar'}
+                  {isEditing ? 'Update' : 'Save'}
                 </button>
               </div>
             </form>
