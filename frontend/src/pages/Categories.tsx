@@ -1,7 +1,9 @@
-import { useState } from 'react';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { PlusIcon, PencilIcon, TrashIcon } from '@heroicons/react/24/outline';
+import { PencilIcon, PlusIcon, TrashIcon } from '@heroicons/react/24/outline';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useEffect, useState } from 'react';
+import Pagination from '../components/common/Pagination';
 import categoryService, { Category } from '../services/categoryService';
+import { PageResponse } from '../types/PageResponse';
 
 interface CategoryFormData {
   id?: number;
@@ -18,11 +20,34 @@ const Categories = () => {
   });
   const [isEditing, setIsEditing] = useState(false);
 
-  // Fetch categories
-  const { data: categories, isLoading } = useQuery({
-    queryKey: ['categories'],
-    queryFn: categoryService.getAll
+  // Pagination state
+  const [currentPage, setCurrentPage] = useState(0);
+  const [pageSize] = useState(10);
+  const [totalPages, setTotalPages] = useState(0);
+  const [totalElements, setTotalElements] = useState(0);
+  const [paginatedCategories, setPaginatedCategories] = useState<Category[]>([]);
+
+  // Fetch categories with pagination
+  const { data: categoriesData, isLoading, isFetching } = useQuery({
+    queryKey: ['categories', currentPage, pageSize],
+    queryFn: () => categoryService.getAll({ pageNo: currentPage, pageSize, sortBy: 'name', sortDir: 'asc' })
   });
+
+  // Update state when data changes
+  useEffect(() => {
+    if (categoriesData) {
+      if ('content' in categoriesData) {
+        const pageData = categoriesData as PageResponse<Category>;
+        setPaginatedCategories(pageData.content);
+        setTotalPages(pageData.totalPages);
+        setTotalElements(pageData.totalElements);
+      } else {
+        setPaginatedCategories(categoriesData as Category[]);
+        setTotalPages(1);
+        setTotalElements((categoriesData as Category[]).length);
+      }
+    }
+  }, [categoriesData]);
 
   // Mutation to create category
   const createMutation = useMutation({
@@ -35,7 +60,7 @@ const Categories = () => {
 
   // Mutation to update category
   const updateMutation = useMutation({
-    mutationFn: (category: Category) => 
+    mutationFn: (category: Category) =>
       categoryService.update(category.id!, category),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['categories'] });
@@ -80,7 +105,7 @@ const Categories = () => {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (isEditing && currentCategory.id) {
       updateMutation.mutate(currentCategory as Category);
     } else {
@@ -102,7 +127,7 @@ const Categories = () => {
     }));
   };
 
-  if (isLoading) {
+  if (isLoading || isFetching) {
     return (
       <div className="flex items-center justify-center h-64">
         <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
@@ -126,8 +151,8 @@ const Categories = () => {
       {/* Categories list */}
       <div className="bg-white shadow overflow-hidden sm:rounded-md">
         <ul className="divide-y divide-gray-200">
-          {categories && categories.length > 0 ? (
-            categories.map((category) => (
+          {paginatedCategories && paginatedCategories.length > 0 ? (
+            paginatedCategories.map((category) => (
               <li key={category.id} className="px-4 py-4 sm:px-6">
                 <div className="flex items-center justify-between">
                   <div className="flex-1 min-w-0">
@@ -161,6 +186,20 @@ const Categories = () => {
         </ul>
       </div>
 
+      {/* Pagination */}
+      {totalPages > 1 && (
+        <div className="mt-4">
+          <div className="flex justify-between items-center mb-2 text-sm text-gray-600">
+            <span>Showing {paginatedCategories.length} of {totalElements} categories</span>
+          </div>
+          <Pagination
+            currentPage={currentPage}
+            totalPages={totalPages}
+            onPageChange={(page) => setCurrentPage(page)}
+          />
+        </div>
+      )}
+
       {/* Form modal */}
       {isModalOpen && (
         <div className="fixed inset-0 bg-gray-500 bg-opacity-75 flex items-center justify-center p-4 z-50">
@@ -168,7 +207,7 @@ const Categories = () => {
             <h2 className="text-lg font-medium text-gray-900 mb-4">
               {isEditing ? 'Edit Category' : 'New Category'}
             </h2>
-            
+
             <form onSubmit={handleSubmit} className="space-y-4">
               <div>
                 <label htmlFor="name" className="block text-sm font-medium text-gray-700">
@@ -184,7 +223,7 @@ const Categories = () => {
                   className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
                 />
               </div>
-              
+
               <div>
                 <label htmlFor="description" className="block text-sm font-medium text-gray-700">
                   Description (optional)
@@ -198,7 +237,7 @@ const Categories = () => {
                   className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
                 />
               </div>
-              
+
               <div className="flex justify-end space-x-3 pt-4">
                 <button
                   type="button"

@@ -1,6 +1,7 @@
 package com.moneycontrol.api.controller;
 
 import com.moneycontrol.api.dto.GoalDto;
+import com.moneycontrol.api.dto.PageResponse;
 import com.moneycontrol.api.model.Goal;
 import com.moneycontrol.api.service.GoalService;
 import jakarta.validation.Valid;
@@ -19,8 +20,19 @@ public class GoalController {
     private final GoalService goalService;
 
     @GetMapping
-    public ResponseEntity<List<Goal>> getAllGoals(Authentication authentication) {
-        return ResponseEntity.ok(goalService.getAllGoalsByUser(authentication.getName()));
+    public ResponseEntity<?> getAllGoals(
+            Authentication authentication,
+            @RequestParam(value = "pageNo", defaultValue = "0", required = false) int pageNo,
+            @RequestParam(value = "pageSize", defaultValue = "10", required = false) int pageSize,
+            @RequestParam(value = "sortBy", defaultValue = "targetDate", required = false) String sortBy,
+            @RequestParam(value = "sortDir", defaultValue = "asc", required = false) String sortDir) {
+
+        if (pageSize > 0) {
+            return ResponseEntity.ok(goalService.getAllGoalsByUser(
+                    authentication.getName(), pageNo, pageSize, sortBy, sortDir));
+        } else {
+            return ResponseEntity.ok(goalService.getAllGoalsByUser(authentication.getName()));
+        }
     }
 
     @GetMapping("/{id}")

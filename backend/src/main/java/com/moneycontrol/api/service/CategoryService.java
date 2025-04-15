@@ -1,10 +1,15 @@
 package com.moneycontrol.api.service;
 
 import com.moneycontrol.api.dto.CategoryDto;
+import com.moneycontrol.api.dto.PageResponse;
 import com.moneycontrol.api.exception.ResourceNotFoundException;
 import com.moneycontrol.api.model.Category;
 import com.moneycontrol.api.repository.CategoryRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -17,6 +22,14 @@ public class CategoryService {
 
     public List<Category> getAllCategories() {
         return categoryRepository.findAll();
+    }
+
+    public PageResponse<Category> getAllCategories(int pageNo, int pageSize, String sortBy, String sortDir) {
+        Sort sort = sortDir.equalsIgnoreCase(Sort.Direction.ASC.name()) ?
+                Sort.by(sortBy).ascending() : Sort.by(sortBy).descending();
+        Pageable pageable = PageRequest.of(pageNo, pageSize, sort);
+        Page<Category> page = categoryRepository.findAll(pageable);
+        return PageResponse.of(page);
     }
 
     public Category getCategoryById(Long id) {

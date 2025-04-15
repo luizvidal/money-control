@@ -1,3 +1,4 @@
+import { PageResponse } from '../types/PageResponse';
 import api from './api';
 
 export interface Transaction {
@@ -9,10 +10,25 @@ export interface Transaction {
   categoryId: number;
 }
 
+export interface TransactionParams {
+  pageNo?: number;
+  pageSize?: number;
+  sortBy?: string;
+  sortDir?: string;
+}
+
 const transactionService = {
-  getAll: async (): Promise<Transaction[]> => {
-    const response = await api.get<Transaction[]>('/transactions');
-    return response.data;
+  getAll: async (params?: TransactionParams): Promise<PageResponse<Transaction> | Transaction[]> => {
+    if (params && params.pageSize && params.pageSize > 0) {
+      const { pageNo = 0, pageSize = 10, sortBy = 'date', sortDir = 'desc' } = params;
+      const response = await api.get<PageResponse<Transaction>>(
+        `/transactions?pageNo=${pageNo}&pageSize=${pageSize}&sortBy=${sortBy}&sortDir=${sortDir}`
+      );
+      return response.data;
+    } else {
+      const response = await api.get<Transaction[]>('/transactions?pageSize=0');
+      return response.data;
+    }
   },
 
   getById: async (id: number): Promise<Transaction> => {
@@ -44,22 +60,47 @@ const transactionService = {
     await api.delete(`/transactions/${id}`);
   },
 
-  getByDateRange: async (start: string, end: string): Promise<Transaction[]> => {
+  getByDateRange: async (start: string, end: string, params?: TransactionParams): Promise<PageResponse<Transaction> | Transaction[]> => {
     // Format dates to include time for LocalDateTime compatibility
     const formattedStart = start.includes('T') ? start : `${start}T00:00:00`;
     const formattedEnd = end.includes('T') ? end : `${end}T23:59:59`;
-    const response = await api.get<Transaction[]>(`/transactions/date-range?start=${formattedStart}&end=${formattedEnd}`);
-    return response.data;
+
+    if (params && params.pageSize && params.pageSize > 0) {
+      const { pageNo = 0, pageSize = 10, sortBy = 'date', sortDir = 'desc' } = params;
+      const response = await api.get<PageResponse<Transaction>>(
+        `/transactions/date-range?start=${formattedStart}&end=${formattedEnd}&pageNo=${pageNo}&pageSize=${pageSize}&sortBy=${sortBy}&sortDir=${sortDir}`
+      );
+      return response.data;
+    } else {
+      const response = await api.get<Transaction[]>(`/transactions/date-range?start=${formattedStart}&end=${formattedEnd}&pageSize=0`);
+      return response.data;
+    }
   },
 
-  getByType: async (type: 'INCOME' | 'EXPENSE'): Promise<Transaction[]> => {
-    const response = await api.get<Transaction[]>(`/transactions/type/${type}`);
-    return response.data;
+  getByType: async (type: 'INCOME' | 'EXPENSE', params?: TransactionParams): Promise<PageResponse<Transaction> | Transaction[]> => {
+    if (params && params.pageSize && params.pageSize > 0) {
+      const { pageNo = 0, pageSize = 10, sortBy = 'date', sortDir = 'desc' } = params;
+      const response = await api.get<PageResponse<Transaction>>(
+        `/transactions/type/${type}?pageNo=${pageNo}&pageSize=${pageSize}&sortBy=${sortBy}&sortDir=${sortDir}`
+      );
+      return response.data;
+    } else {
+      const response = await api.get<Transaction[]>(`/transactions/type/${type}?pageSize=0`);
+      return response.data;
+    }
   },
 
-  getByCategory: async (categoryId: number): Promise<Transaction[]> => {
-    const response = await api.get<Transaction[]>(`/transactions/category/${categoryId}`);
-    return response.data;
+  getByCategory: async (categoryId: number, params?: TransactionParams): Promise<PageResponse<Transaction> | Transaction[]> => {
+    if (params && params.pageSize && params.pageSize > 0) {
+      const { pageNo = 0, pageSize = 10, sortBy = 'date', sortDir = 'desc' } = params;
+      const response = await api.get<PageResponse<Transaction>>(
+        `/transactions/category/${categoryId}?pageNo=${pageNo}&pageSize=${pageSize}&sortBy=${sortBy}&sortDir=${sortDir}`
+      );
+      return response.data;
+    } else {
+      const response = await api.get<Transaction[]>(`/transactions/category/${categoryId}?pageSize=0`);
+      return response.data;
+    }
   }
 };
 

@@ -1,3 +1,4 @@
+import { PageResponse } from '../types/PageResponse';
 import api from './api';
 
 export interface Category {
@@ -6,10 +7,25 @@ export interface Category {
   description?: string;
 }
 
+export interface CategoryParams {
+  pageNo?: number;
+  pageSize?: number;
+  sortBy?: string;
+  sortDir?: string;
+}
+
 const categoryService = {
-  getAll: async (): Promise<Category[]> => {
-    const response = await api.get<Category[]>('/categories');
-    return response.data;
+  getAll: async (params?: CategoryParams): Promise<PageResponse<Category> | Category[]> => {
+    if (params && params.pageSize && params.pageSize > 0) {
+      const { pageNo = 0, pageSize = 10, sortBy = 'name', sortDir = 'asc' } = params;
+      const response = await api.get<PageResponse<Category>>(
+        `/categories?pageNo=${pageNo}&pageSize=${pageSize}&sortBy=${sortBy}&sortDir=${sortDir}`
+      );
+      return response.data;
+    } else {
+      const response = await api.get<Category[]>('/categories?pageSize=0');
+      return response.data;
+    }
   },
 
   getById: async (id: number): Promise<Category> => {

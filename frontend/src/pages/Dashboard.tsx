@@ -12,8 +12,10 @@ import {
 } from 'chart.js';
 import { useEffect, useState } from 'react';
 import { Line, Pie } from 'react-chartjs-2';
+import Pagination from '../components/common/Pagination';
 import categoryService, { Category } from '../services/categoryService';
 import transactionService, { Transaction } from '../services/transactionService';
+import { PageResponse } from '../types/PageResponse';
 
 // Register Chart.js components
 ChartJS.register(
@@ -40,10 +42,22 @@ const Dashboard = () => {
     backgroundColor: []
   });
 
-  // Fetch transactions
-  const { data: transactions, isLoading: transactionsLoading } = useQuery({
-    queryKey: ['transactions'],
-    queryFn: transactionService.getAll
+  // Pagination state for latest transactions
+  const [currentPage, setCurrentPage] = useState(0);
+  const [pageSize] = useState(5);
+  const [totalPages, setTotalPages] = useState(0);
+  const [latestTransactions, setLatestTransactions] = useState<Transaction[]>([]);
+
+  // Fetch transactions with pagination for latest transactions section
+  const { data: transactionsData, isLoading: transactionsLoading } = useQuery({
+    queryKey: ['transactions', 'latest', currentPage, pageSize],
+    queryFn: () => transactionService.getAll({ pageNo: currentPage, pageSize, sortBy: 'date', sortDir: 'desc' })
+  });
+
+  // Fetch all transactions for charts
+  const { data: allTransactions, isLoading: allTransactionsLoading } = useQuery({
+    queryKey: ['transactions', 'all'],
+    queryFn: () => transactionService.getAll()
   });
 
   // Fetch categories
@@ -52,13 +66,27 @@ const Dashboard = () => {
     queryFn: categoryService.getAll
   });
 
+  // Update state when latest transactions data changes
+  useEffect(() => {
+    if (transactionsData) {
+      if ('content' in transactionsData) {
+        const pageData = transactionsData as PageResponse<Transaction>;
+        setLatestTransactions(pageData.content);
+        setTotalPages(pageData.totalPages);
+      } else {
+        setLatestTransactions((transactionsData as Transaction[]).slice(0, pageSize));
+        setTotalPages(1);
+      }
+    }
+  }, [transactionsData, pageSize]);
+
   // Process data for charts when queries are completed
   useEffect(() => {
-    if (transactions && categories) {
-      processMonthlyData(transactions);
-      processCategoryData(transactions, categories);
+    if (allTransactions && categories) {
+      processMonthlyData(allTransactions);
+      processCategoryData(allTransactions, categories);
     }
-  }, [transactions, categories]);
+  }, [allTransactions, categories]);
 
   // Process data for line chart (monthly evolution)
   const processMonthlyData = (transactions: Transaction[]) => {
@@ -148,13 +176,13 @@ const Dashboard = () => {
 
   // Calculate totals
   const calculateTotals = () => {
-    if (!transactions) return { income: 0, expense: 0, balance: 0 };
+    if (!allTransactions) return { income: 0, expense: 0, balance: 0 };
 
-    const income = transactions
+    const income = allTransactions
       .filter(t => t.type === 'INCOME')
       .reduce((sum, t) => sum + t.amount, 0);
 
-    const expense = transactions
+    const expense = allTransactions
       .filter(t => t.type === 'EXPENSE')
       .reduce((sum, t) => sum + t.amount, 0);
 
@@ -200,7 +228,7 @@ const Dashboard = () => {
     ],
   };
 
-  if (transactionsLoading || categoriesLoading) {
+  if (transactionsLoading || allTransactionsLoading || categoriesLoading) {
     return (
       <div className="flex items-center justify-center h-64">
         <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
@@ -273,8 +301,8 @@ const Dashboard = () => {
           <h2 className="text-lg font-medium text-gray-900">Latest Transactions</h2>
         </div>
         <ul className="divide-y divide-gray-200">
-          {transactions && transactions.length > 0 ? (
-            transactions.slice(0, 5).map((transaction) => (
+          {latestTransactions && latestTransactions.length > 0 ? (
+            latestTransactions.map((transaction) => (
               <li key={transaction.id}>
                 <div className="px-4 py-4 sm:px-6">
                   <div className="flex items-center justify-between">
@@ -308,6 +336,17 @@ const Dashboard = () => {
             </li>
           )}
         </ul>
+
+        {/* Pagination for latest transactions */}
+        {totalPages > 1 && (
+          <div className="px-4 py-3 border-t border-gray-200">
+            <Pagination
+              currentPage={currentPage}
+              totalPages={totalPages}
+              onPageChange={(page) => setCurrentPage(page)}
+            />
+          </div>
+        )}
       </div>
     </div>
   );

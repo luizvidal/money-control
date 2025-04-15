@@ -1,8 +1,10 @@
 import { PencilIcon, PlusIcon, TrashIcon } from '@heroicons/react/24/outline';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
+import Pagination from '../components/common/Pagination';
 import categoryService from '../services/categoryService';
 import transactionService, { Transaction } from '../services/transactionService';
+import { PageResponse } from '../types/PageResponse';
 
 interface TransactionFormData {
   id?: number;
@@ -25,11 +27,34 @@ const Transactions = () => {
   });
   const [isEditing, setIsEditing] = useState(false);
 
-  // Fetch transactions
-  const { data: transactions, isLoading: transactionsLoading } = useQuery({
-    queryKey: ['transactions'],
-    queryFn: transactionService.getAll
+  // Pagination state
+  const [currentPage, setCurrentPage] = useState(0);
+  const [pageSize] = useState(10);
+  const [totalPages, setTotalPages] = useState(0);
+  const [totalElements, setTotalElements] = useState(0);
+  const [paginatedTransactions, setPaginatedTransactions] = useState<Transaction[]>([]);
+
+  // Fetch transactions with pagination
+  const { data: transactionsData, isLoading: transactionsLoading, isFetching: transactionsFetching } = useQuery({
+    queryKey: ['transactions', currentPage, pageSize],
+    queryFn: () => transactionService.getAll({ pageNo: currentPage, pageSize, sortBy: 'date', sortDir: 'desc' })
   });
+
+  // Update state when data changes
+  useEffect(() => {
+    if (transactionsData) {
+      if ('content' in transactionsData) {
+        const pageData = transactionsData as PageResponse<Transaction>;
+        setPaginatedTransactions(pageData.content);
+        setTotalPages(pageData.totalPages);
+        setTotalElements(pageData.totalElements);
+      } else {
+        setPaginatedTransactions(transactionsData as Transaction[]);
+        setTotalPages(1);
+        setTotalElements((transactionsData as Transaction[]).length);
+      }
+    }
+  }, [transactionsData]);
 
   // Fetch categories
   const { data: categories, isLoading: categoriesLoading } = useQuery({
@@ -124,7 +149,7 @@ const Transactions = () => {
     }));
   };
 
-  if (transactionsLoading || categoriesLoading) {
+  if (transactionsLoading || transactionsFetching || categoriesLoading) {
     return (
       <div className="flex items-center justify-center h-64">
         <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
@@ -148,8 +173,8 @@ const Transactions = () => {
       {/* Transaction list */}
       <div className="bg-white shadow overflow-hidden sm:rounded-md">
         <ul className="divide-y divide-gray-200">
-          {transactions && transactions.length > 0 ? (
-            transactions.map((transaction) => (
+          {paginatedTransactions && paginatedTransactions.length > 0 ? (
+            paginatedTransactions.map((transaction) => (
               <li key={transaction.id} className="px-4 py-4 sm:px-6">
                 <div className="flex items-center justify-between">
                   <div className="flex-1 min-w-0">
@@ -190,6 +215,20 @@ const Transactions = () => {
           )}
         </ul>
       </div>
+
+      {/* Pagination */}
+      {totalPages > 1 && (
+        <div className="mt-4">
+          <div className="flex justify-between items-center mb-2 text-sm text-gray-600">
+            <span>Showing {paginatedTransactions.length} of {totalElements} transactions</span>
+          </div>
+          <Pagination
+            currentPage={currentPage}
+            totalPages={totalPages}
+            onPageChange={(page) => setCurrentPage(page)}
+          />
+        </div>
+      )}
 
       {/* Form modal */}
       {isModalOpen && (

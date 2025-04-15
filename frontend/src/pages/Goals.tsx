@@ -1,7 +1,9 @@
 import { PencilIcon, PlusIcon, TrashIcon } from '@heroicons/react/24/outline';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
+import Pagination from '../components/common/Pagination';
 import goalService, { Goal } from '../services/goalService';
+import { PageResponse } from '../types/PageResponse';
 
 interface GoalFormData {
   id?: number;
@@ -24,11 +26,34 @@ const Goals = () => {
   });
   const [isEditing, setIsEditing] = useState(false);
 
-  // Fetch goals
-  const { data: goals, isLoading } = useQuery({
-    queryKey: ['goals'],
-    queryFn: goalService.getAll
+  // Pagination state
+  const [currentPage, setCurrentPage] = useState(0);
+  const [pageSize] = useState(10);
+  const [totalPages, setTotalPages] = useState(0);
+  const [totalElements, setTotalElements] = useState(0);
+  const [paginatedGoals, setPaginatedGoals] = useState<Goal[]>([]);
+
+  // Fetch goals with pagination
+  const { data: goalsData, isLoading, isFetching } = useQuery({
+    queryKey: ['goals', currentPage, pageSize],
+    queryFn: () => goalService.getAll({ pageNo: currentPage, pageSize, sortBy: 'targetDate', sortDir: 'asc' })
   });
+
+  // Update state when data changes
+  useEffect(() => {
+    if (goalsData) {
+      if ('content' in goalsData) {
+        const pageData = goalsData as PageResponse<Goal>;
+        setPaginatedGoals(pageData.content);
+        setTotalPages(pageData.totalPages);
+        setTotalElements(pageData.totalElements);
+      } else {
+        setPaginatedGoals(goalsData as Goal[]);
+        setTotalPages(1);
+        setTotalElements((goalsData as Goal[]).length);
+      }
+    }
+  }, [goalsData]);
 
   // Mutation to create goal
   const createMutation = useMutation({
@@ -124,7 +149,7 @@ const Goals = () => {
     return Math.min(progress, 100);
   };
 
-  if (isLoading) {
+  if (isLoading || isFetching) {
     return (
       <div className="flex items-center justify-center h-64">
         <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
@@ -147,8 +172,8 @@ const Goals = () => {
 
       {/* Goals list */}
       <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
-        {goals && goals.length > 0 ? (
-          goals.map((goal) => {
+        {paginatedGoals && paginatedGoals.length > 0 ? (
+          paginatedGoals.map((goal) => {
             const progress = calculateProgress(goal.currentAmount, goal.targetAmount);
             const daysLeft = Math.ceil((new Date(goal.targetDate).getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24));
 
@@ -231,6 +256,20 @@ const Goals = () => {
           </div>
         )}
       </div>
+
+      {/* Pagination */}
+      {totalPages > 1 && (
+        <div className="mt-4">
+          <div className="flex justify-between items-center mb-2 text-sm text-gray-600">
+            <span>Showing {paginatedGoals.length} of {totalElements} goals</span>
+          </div>
+          <Pagination
+            currentPage={currentPage}
+            totalPages={totalPages}
+            onPageChange={(page) => setCurrentPage(page)}
+          />
+        </div>
+      )}
 
       {/* Form modal */}
       {isModalOpen && (

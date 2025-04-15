@@ -1,5 +1,6 @@
 package com.moneycontrol.api.controller;
 
+import com.moneycontrol.api.dto.PageResponse;
 import com.moneycontrol.api.dto.TransactionDto;
 import com.moneycontrol.api.model.Transaction;
 import com.moneycontrol.api.service.TransactionService;
@@ -21,8 +22,19 @@ public class TransactionController {
     private final TransactionService transactionService;
 
     @GetMapping
-    public ResponseEntity<List<Transaction>> getAllTransactions(Authentication authentication) {
-        return ResponseEntity.ok(transactionService.getAllTransactionsByUser(authentication.getName()));
+    public ResponseEntity<?> getAllTransactions(
+            Authentication authentication,
+            @RequestParam(value = "pageNo", defaultValue = "0", required = false) int pageNo,
+            @RequestParam(value = "pageSize", defaultValue = "10", required = false) int pageSize,
+            @RequestParam(value = "sortBy", defaultValue = "date", required = false) String sortBy,
+            @RequestParam(value = "sortDir", defaultValue = "desc", required = false) String sortDir) {
+
+        if (pageSize > 0) {
+            return ResponseEntity.ok(transactionService.getAllTransactionsByUser(
+                    authentication.getName(), pageNo, pageSize, sortBy, sortDir));
+        } else {
+            return ResponseEntity.ok(transactionService.getAllTransactionsByUser(authentication.getName()));
+        }
     }
 
     @GetMapping("/{id}")
@@ -31,13 +43,13 @@ public class TransactionController {
     }
 
     @PostMapping
-    public ResponseEntity<Transaction> createTransaction(@Valid @RequestBody TransactionDto transactionDto, 
+    public ResponseEntity<Transaction> createTransaction(@Valid @RequestBody TransactionDto transactionDto,
                                                         Authentication authentication) {
         return ResponseEntity.ok(transactionService.createTransaction(transactionDto, authentication.getName()));
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<Transaction> updateTransaction(@PathVariable Long id, 
+    public ResponseEntity<Transaction> updateTransaction(@PathVariable Long id,
                                                         @Valid @RequestBody TransactionDto transactionDto,
                                                         Authentication authentication) {
         return ResponseEntity.ok(transactionService.updateTransaction(id, transactionDto, authentication.getName()));
@@ -50,24 +62,54 @@ public class TransactionController {
     }
 
     @GetMapping("/date-range")
-    public ResponseEntity<List<Transaction>> getTransactionsByDateRange(
+    public ResponseEntity<?> getTransactionsByDateRange(
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime start,
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime end,
-            Authentication authentication) {
-        return ResponseEntity.ok(transactionService.getTransactionsByDateRange(start, end, authentication.getName()));
+            Authentication authentication,
+            @RequestParam(value = "pageNo", defaultValue = "0", required = false) int pageNo,
+            @RequestParam(value = "pageSize", defaultValue = "10", required = false) int pageSize,
+            @RequestParam(value = "sortBy", defaultValue = "date", required = false) String sortBy,
+            @RequestParam(value = "sortDir", defaultValue = "desc", required = false) String sortDir) {
+
+        if (pageSize > 0) {
+            return ResponseEntity.ok(transactionService.getTransactionsByDateRange(
+                    start, end, authentication.getName(), pageNo, pageSize, sortBy, sortDir));
+        } else {
+            return ResponseEntity.ok(transactionService.getTransactionsByDateRange(start, end, authentication.getName()));
+        }
     }
 
     @GetMapping("/type/{type}")
-    public ResponseEntity<List<Transaction>> getTransactionsByType(
+    public ResponseEntity<?> getTransactionsByType(
             @PathVariable Transaction.TransactionType type,
-            Authentication authentication) {
-        return ResponseEntity.ok(transactionService.getTransactionsByType(type, authentication.getName()));
+            Authentication authentication,
+            @RequestParam(value = "pageNo", defaultValue = "0", required = false) int pageNo,
+            @RequestParam(value = "pageSize", defaultValue = "10", required = false) int pageSize,
+            @RequestParam(value = "sortBy", defaultValue = "date", required = false) String sortBy,
+            @RequestParam(value = "sortDir", defaultValue = "desc", required = false) String sortDir) {
+
+        if (pageSize > 0) {
+            return ResponseEntity.ok(transactionService.getTransactionsByType(
+                    type, authentication.getName(), pageNo, pageSize, sortBy, sortDir));
+        } else {
+            return ResponseEntity.ok(transactionService.getTransactionsByType(type, authentication.getName()));
+        }
     }
 
     @GetMapping("/category/{categoryId}")
-    public ResponseEntity<List<Transaction>> getTransactionsByCategory(
+    public ResponseEntity<?> getTransactionsByCategory(
             @PathVariable Long categoryId,
-            Authentication authentication) {
-        return ResponseEntity.ok(transactionService.getTransactionsByCategory(categoryId, authentication.getName()));
+            Authentication authentication,
+            @RequestParam(value = "pageNo", defaultValue = "0", required = false) int pageNo,
+            @RequestParam(value = "pageSize", defaultValue = "10", required = false) int pageSize,
+            @RequestParam(value = "sortBy", defaultValue = "date", required = false) String sortBy,
+            @RequestParam(value = "sortDir", defaultValue = "desc", required = false) String sortDir) {
+
+        if (pageSize > 0) {
+            return ResponseEntity.ok(transactionService.getTransactionsByCategory(
+                    categoryId, authentication.getName(), pageNo, pageSize, sortBy, sortDir));
+        } else {
+            return ResponseEntity.ok(transactionService.getTransactionsByCategory(categoryId, authentication.getName()));
+        }
     }
 }
