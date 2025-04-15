@@ -1,18 +1,27 @@
+import {
+  ArrowTrendingUpIcon,
+  BanknotesIcon,
+  ChartPieIcon
+} from '@heroicons/react/24/outline';
 import { useQuery } from '@tanstack/react-query';
 import {
-    ArcElement,
-    CategoryScale,
-    Chart as ChartJS,
-    Legend,
-    LinearScale,
-    LineElement,
-    PointElement,
-    Title,
-    Tooltip
+  ArcElement,
+  CategoryScale,
+  Chart as ChartJS,
+  Legend,
+  LinearScale,
+  LineElement,
+  PointElement,
+  Title,
+  Tooltip
 } from 'chart.js';
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Line, Pie } from 'react-chartjs-2';
-import Pagination from '../components/common/Pagination';
+import ChartCard from '../components/dashboard/ChartCard';
+import DashboardHeader from '../components/dashboard/DashboardHeader';
+import LoadingSpinner from '../components/dashboard/LoadingSpinner';
+import SummaryCard from '../components/dashboard/SummaryCard';
+import TransactionsList from '../components/dashboard/TransactionsList';
 import categoryService, { Category } from '../services/categoryService';
 import transactionService, { Transaction } from '../services/transactionService';
 import { PageResponse } from '../types/PageResponse';
@@ -55,16 +64,31 @@ const Dashboard = () => {
   });
 
   // Fetch all transactions for charts
-  const { data: allTransactions, isLoading: allTransactionsLoading } = useQuery({
+  const { data: allTransactionsData, isLoading: allTransactionsLoading } = useQuery({
     queryKey: ['transactions', 'all'],
     queryFn: () => transactionService.getAll()
   });
 
   // Fetch categories
-  const { data: categories, isLoading: categoriesLoading } = useQuery({
+  const { data: categoriesData, isLoading: categoriesLoading } = useQuery({
     queryKey: ['categories'],
-    queryFn: categoryService.getAll
+    queryFn: () => categoryService.getAll()
   });
+
+  // Convert data to appropriate types using useMemo to avoid unnecessary re-renders
+  const allTransactions = useMemo<Transaction[]>(() => {
+    if (!allTransactionsData) return [];
+    return Array.isArray(allTransactionsData)
+      ? allTransactionsData
+      : allTransactionsData.content || [];
+  }, [allTransactionsData]);
+
+  const categories = useMemo<Category[]>(() => {
+    if (!categoriesData) return [];
+    return Array.isArray(categoriesData)
+      ? categoriesData
+      : categoriesData.content || [];
+  }, [categoriesData]);
 
   // Update state when latest transactions data changes
   useEffect(() => {
@@ -82,11 +106,11 @@ const Dashboard = () => {
 
   // Process data for charts when queries are completed
   useEffect(() => {
-    if (allTransactions && categories) {
+    if (allTransactionsData && categoriesData) {
       processMonthlyData(allTransactions);
       processCategoryData(allTransactions, categories);
     }
-  }, [allTransactions, categories]);
+  }, [allTransactionsData, categoriesData, allTransactions, categories]);
 
   // Process data for line chart (monthly evolution)
   const processMonthlyData = (transactions: Transaction[]) => {
@@ -164,11 +188,11 @@ const Dashboard = () => {
 
     // Format data for the chart
     const categoryEntries = Array.from(categoryMap.entries())
-      .filter(([_, data]) => data.total > 0)
+      .filter(([, data]) => data.total > 0)
       .sort((a, b) => b[1].total - a[1].total);
 
-    const labels = categoryEntries.map(([_, data]) => data.name);
-    const data = categoryEntries.map(([_, data]) => data.total);
+    const labels = categoryEntries.map(([, data]) => data.name);
+    const data = categoryEntries.map(([, data]) => data.total);
     const backgroundColor = generateColors(labels.length);
 
     setCategoryData({ labels, data, backgroundColor });
@@ -229,125 +253,79 @@ const Dashboard = () => {
   };
 
   if (transactionsLoading || allTransactionsLoading || categoriesLoading) {
-    return (
-      <div className="flex items-center justify-center h-64">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
-      </div>
-    );
+    return <LoadingSpinner message="Loading dashboard data..." />;
   }
 
+  // Chart options
+  const chartOptions = {
+    maintainAspectRatio: false,
+    plugins: {
+      legend: {
+        position: 'bottom' as const,
+        labels: {
+          usePointStyle: true,
+          padding: 20
+        }
+      }
+    }
+  };
+
   return (
-    <div className="space-y-6">
-      <h1 className="text-2xl font-semibold text-gray-900">Dashboard</h1>
+    <div className="space-y-8 animate-fadeIn">
+      <DashboardHeader
+        title="Financial Dashboard"
+        subtitle="Overview of your financial activity"
+      />
 
       {/* Summary cards */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <div className="bg-white overflow-hidden shadow rounded-lg">
-          <div className="px-4 py-5 sm:p-6">
-            <dt className="text-sm font-medium text-gray-500 truncate">Monthly Income</dt>
-            <dd className="mt-1 text-3xl font-semibold text-green-600">R$ {totals.income.toFixed(2)}</dd>
-          </div>
-        </div>
+        <SummaryCard
+          title="Monthly Income"
+          value={`R$ ${totals.income.toFixed(2)}`}
+          valueColor="text-green-600"
+          icon={<BanknotesIcon className="h-6 w-6 text-green-600" />}
+        />
 
-        <div className="bg-white overflow-hidden shadow rounded-lg">
-          <div className="px-4 py-5 sm:p-6">
-            <dt className="text-sm font-medium text-gray-500 truncate">Monthly Expenses</dt>
-            <dd className="mt-1 text-3xl font-semibold text-red-600">R$ {totals.expense.toFixed(2)}</dd>
-          </div>
-        </div>
+        <SummaryCard
+          title="Monthly Expenses"
+          value={`R$ ${totals.expense.toFixed(2)}`}
+          valueColor="text-red-600"
+          icon={<ChartPieIcon className="h-6 w-6 text-red-600" />}
+        />
 
-        <div className="bg-white overflow-hidden shadow rounded-lg">
-          <div className="px-4 py-5 sm:p-6">
-            <dt className="text-sm font-medium text-gray-500 truncate">Balance</dt>
-            <dd className={`mt-1 text-3xl font-semibold ${totals.balance >= 0 ? 'text-blue-600' : 'text-red-600'}`}>
-              R$ {totals.balance.toFixed(2)}
-            </dd>
-          </div>
-        </div>
+        <SummaryCard
+          title="Balance"
+          value={`R$ ${totals.balance.toFixed(2)}`}
+          valueColor={totals.balance >= 0 ? 'text-blue-600' : 'text-red-600'}
+          icon={<ArrowTrendingUpIcon className="h-6 w-6 text-blue-600" />}
+        />
       </div>
 
       {/* Charts */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <div className="bg-white p-6 rounded-lg shadow">
-          <h2 className="text-lg font-medium text-gray-900 mb-4">Expenses by Category</h2>
-          <div className="h-64">
-            {categoryData.data.length > 0 ? (
-              <Pie data={pieChartData} options={{ maintainAspectRatio: false }} />
-            ) : (
-              <div className="flex items-center justify-center h-full text-gray-500">
-                No data to display
-              </div>
-            )}
-          </div>
-        </div>
+        <ChartCard
+          title="Expenses by Category"
+          hasData={categoryData.data.length > 0}
+        >
+          <Pie data={pieChartData} options={chartOptions} />
+        </ChartCard>
 
-        <div className="bg-white p-6 rounded-lg shadow">
-          <h2 className="text-lg font-medium text-gray-900 mb-4">Monthly Evolution</h2>
-          <div className="h-64">
-            {monthlyData.labels.length > 0 ? (
-              <Line data={lineChartData} options={{ maintainAspectRatio: false }} />
-            ) : (
-              <div className="flex items-center justify-center h-full text-gray-500">
-                No data to display
-              </div>
-            )}
-          </div>
-        </div>
+        <ChartCard
+          title="Monthly Evolution"
+          hasData={monthlyData.labels.length > 0}
+        >
+          <Line data={lineChartData} options={chartOptions} />
+        </ChartCard>
       </div>
 
       {/* Latest transactions */}
-      <div className="bg-white shadow overflow-hidden sm:rounded-md">
-        <div className="px-4 py-5 sm:px-6">
-          <h2 className="text-lg font-medium text-gray-900">Latest Transactions</h2>
-        </div>
-        <ul className="divide-y divide-gray-200">
-          {latestTransactions && latestTransactions.length > 0 ? (
-            latestTransactions.map((transaction) => (
-              <li key={transaction.id}>
-                <div className="px-4 py-4 sm:px-6">
-                  <div className="flex items-center justify-between">
-                    <p className="text-sm font-medium text-blue-600 truncate">{transaction.description}</p>
-                    <div className="ml-2 flex-shrink-0 flex">
-                      <p className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
-                        transaction.type === 'INCOME' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
-                      }`}>
-                        {transaction.type === 'INCOME' ? 'Income' : 'Expense'}
-                      </p>
-                    </div>
-                  </div>
-                  <div className="mt-2 sm:flex sm:justify-between">
-                    <div className="sm:flex">
-                      <p className="flex items-center text-sm text-gray-500">
-                        {new Date(transaction.date).toLocaleDateString()}
-                      </p>
-                    </div>
-                    <div className="mt-2 flex items-center text-sm text-gray-500 sm:mt-0">
-                      <p className={`font-medium ${transaction.type === 'INCOME' ? 'text-green-600' : 'text-red-600'}`}>
-                        {transaction.type === 'INCOME' ? '+' : '-'} R$ {transaction.amount.toFixed(2)}
-                      </p>
-                    </div>
-                  </div>
-                </div>
-              </li>
-            ))
-          ) : (
-            <li className="px-4 py-4 sm:px-6 text-center text-gray-500">
-              No transactions found
-            </li>
-          )}
-        </ul>
-
-        {/* Pagination for latest transactions */}
-        {totalPages > 1 && (
-          <div className="px-4 py-3 border-t border-gray-200">
-            <Pagination
-              currentPage={currentPage}
-              totalPages={totalPages}
-              onPageChange={(page) => setCurrentPage(page)}
-            />
-          </div>
-        )}
-      </div>
+      <TransactionsList
+        title="Latest Transactions"
+        transactions={latestTransactions}
+        currentPage={currentPage}
+        totalPages={totalPages}
+        onPageChange={(page) => setCurrentPage(page)}
+      />
     </div>
   );
 };
