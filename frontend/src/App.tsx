@@ -2,6 +2,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { Navigate, Route, BrowserRouter as Router, Routes } from 'react-router-dom';
 import ProtectedRoute from './components/ProtectedRoute';
 import { AuthProvider } from './contexts/AuthContext';
+import Categories from './pages/Categories';
 import Dashboard from './pages/Dashboard';
 import Goals from './pages/Goals';
 import Login from './pages/Login';
@@ -32,6 +33,7 @@ function App() {
             <Route element={<ProtectedRoute />}>
               <Route path="/dashboard" element={<Dashboard />} />
               <Route path="/transactions" element={<Transactions />} />
+              <Route path="/categories" element={<Categories />} />
               <Route path="/goals" element={<Goals />} />
             </Route>
 
