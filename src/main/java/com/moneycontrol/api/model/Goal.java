@@ -1,5 +1,6 @@
 package com.moneycontrol.api.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.Future;
 import jakarta.validation.constraints.NotBlank;
@@ -42,5 +43,6 @@ public class Goal {
 
     @ManyToOne
     @JoinColumn(name = "user_id")
+    @JsonIgnoreProperties({"transactions", "goals", "password", "authorities"})
     private User user;
 }

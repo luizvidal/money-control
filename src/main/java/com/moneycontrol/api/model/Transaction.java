@@ -1,5 +1,6 @@
 package com.moneycontrol.api.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
@@ -38,10 +39,12 @@ public class Transaction {
 
     @ManyToOne
     @JoinColumn(name = "category_id")
+    @JsonIgnoreProperties({"transactions"})
     private Category category;
 
     @ManyToOne
     @JoinColumn(name = "user_id")
+    @JsonIgnoreProperties({"transactions", "goals", "password", "authorities"})
     private User user;
 
     public enum TransactionType {
