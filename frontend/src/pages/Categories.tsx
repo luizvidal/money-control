@@ -1,8 +1,16 @@
-import { PencilIcon, PlusIcon, TrashIcon } from '@heroicons/react/24/outline';
+import { PlusIcon } from '@heroicons/react/24/outline';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useEffect, useState } from 'react';
+import CategoryItem from '../components/categories/CategoryItem';
+import CategoryModal from '../components/categories/CategoryModal';
+import ConfirmDialog from '../components/common/ConfirmDialog';
+import Notification from '../components/common/Notification';
+import PageHeader from '../components/common/PageHeader';
 import Pagination from '../components/common/Pagination';
+import LoadingSpinner from '../components/dashboard/LoadingSpinner';
+import PageLayout from '../components/Layout/PageLayout';
 import categoryService, { Category } from '../services/categoryService';
+import '../styles/animations.css';
 import { PageResponse } from '../types/PageResponse';
 
 interface CategoryFormData {
@@ -14,11 +22,18 @@ interface CategoryFormData {
 const Categories = () => {
   const queryClient = useQueryClient();
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isConfirmDialogOpen, setIsConfirmDialogOpen] = useState(false);
+  const [categoryToDelete, setCategoryToDelete] = useState<number | null>(null);
   const [currentCategory, setCurrentCategory] = useState<CategoryFormData>({
     name: '',
     description: ''
   });
   const [isEditing, setIsEditing] = useState(false);
+  const [notification, setNotification] = useState({
+    type: 'success' as 'success' | 'error',
+    message: '',
+    isVisible: false
+  });
 
   // Pagination state
   const [currentPage, setCurrentPage] = useState(0);
@@ -55,6 +70,10 @@ const Categories = () => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['categories'] });
       resetForm();
+      showNotification('success', 'Category created successfully');
+    },
+    onError: (error) => {
+      showNotification('error', `Failed to create category: ${error.message}`);
     }
   });
 
@@ -65,6 +84,10 @@ const Categories = () => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['categories'] });
       resetForm();
+      showNotification('success', 'Category updated successfully');
+    },
+    onError: (error) => {
+      showNotification('error', `Failed to update category: ${error.message}`);
     }
   });
 
@@ -73,6 +96,10 @@ const Categories = () => {
     mutationFn: categoryService.delete,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['categories'] });
+      showNotification('success', 'Category deleted successfully');
+    },
+    onError: (error) => {
+      showNotification('error', `Failed to delete category: ${error.message}`);
     }
   });
 
@@ -114,9 +141,36 @@ const Categories = () => {
   };
 
   const handleDelete = (id: number) => {
-    if (window.confirm('Are you sure you want to delete this category?')) {
-      deleteMutation.mutate(id);
+    setCategoryToDelete(id);
+    setIsConfirmDialogOpen(true);
+  };
+
+  const confirmDelete = () => {
+    if (categoryToDelete !== null) {
+      deleteMutation.mutate(categoryToDelete);
+      setIsConfirmDialogOpen(false);
+      setCategoryToDelete(null);
     }
+  };
+
+  const cancelDelete = () => {
+    setIsConfirmDialogOpen(false);
+    setCategoryToDelete(null);
+  };
+
+  const showNotification = (type: 'success' | 'error', message: string) => {
+    setNotification({
+      type,
+      message,
+      isVisible: true
+    });
+  };
+
+  const hideNotification = () => {
+    setNotification(prev => ({
+      ...prev,
+      isVisible: false
+    }));
   };
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
@@ -127,136 +181,107 @@ const Categories = () => {
     }));
   };
 
+  // Loading state
   if (isLoading || isFetching) {
-    return (
-      <div className="flex items-center justify-center h-64">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
-      </div>
-    );
+    return <LoadingSpinner message="Loading categories..." />;
   }
 
-  return (
-    <div className="space-y-6">
-      <div className="flex justify-between items-center">
-        <h1 className="text-2xl font-semibold text-gray-900">Categories</h1>
-        <button
-          onClick={() => handleOpenModal()}
-          className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-        >
-          <PlusIcon className="h-5 w-5 mr-2" />
-          New Category
-        </button>
-      </div>
+  // Create new category button
+  const newCategoryButton = (
+    <button
+      onClick={() => handleOpenModal()}
+      className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors duration-150"
+    >
+      <PlusIcon className="h-5 w-5 mr-2" />
+      New Category
+    </button>
+  );
 
-      {/* Categories list */}
-      <div className="bg-white shadow overflow-hidden sm:rounded-md">
+  // Page header component
+  const header = (
+    <div className="p-6 pb-0">
+      <PageHeader
+        title="Categories"
+        subtitle="Manage your transaction categories"
+        action={newCategoryButton}
+      />
+    </div>
+  );
+
+  // Page content component
+  const content = (
+    <div className="p-6 pt-4">
+      <div className="bg-white shadow-md rounded-lg overflow-hidden hover:shadow-lg transition-shadow duration-300">
         <ul className="divide-y divide-gray-200">
           {paginatedCategories && paginatedCategories.length > 0 ? (
             paginatedCategories.map((category) => (
-              <li key={category.id} className="px-4 py-4 sm:px-6">
-                <div className="flex items-center justify-between">
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium text-blue-600 truncate">{category.name}</p>
-                    {category.description && (
-                      <p className="mt-1 text-sm text-gray-500">{category.description}</p>
-                    )}
-                  </div>
-                  <div className="flex items-center space-x-4">
-                    <button
-                      onClick={() => handleOpenModal(category)}
-                      className="text-gray-400 hover:text-blue-500"
-                    >
-                      <PencilIcon className="h-5 w-5" />
-                    </button>
-                    <button
-                      onClick={() => category.id && handleDelete(category.id)}
-                      className="text-gray-400 hover:text-red-500"
-                    >
-                      <TrashIcon className="h-5 w-5" />
-                    </button>
-                  </div>
-                </div>
-              </li>
+              <CategoryItem
+                key={category.id}
+                category={category}
+                onEdit={handleOpenModal}
+                onDelete={handleDelete}
+              />
             ))
           ) : (
-            <li className="px-4 py-4 sm:px-6 text-center text-gray-500">
+            <li className="px-4 py-8 text-center text-gray-500">
               No categories found
             </li>
           )}
         </ul>
       </div>
+    </div>
+  );
 
-      {/* Pagination */}
-      {totalPages > 1 && (
-        <div className="mt-4">
-          <div className="flex justify-between items-center mb-2 text-sm text-gray-600">
-            <span>Showing {paginatedCategories.length} of {totalElements} categories</span>
-          </div>
-          <Pagination
-            currentPage={currentPage}
-            totalPages={totalPages}
-            onPageChange={(page) => setCurrentPage(page)}
-          />
-        </div>
-      )}
+  // Page footer with pagination
+  const footer = totalPages > 1 ? (
+    <div className="p-4">
+      <div className="flex justify-between items-center mb-2 text-sm text-gray-600">
+        <span>Showing {paginatedCategories.length} of {totalElements} categories</span>
+      </div>
+      <Pagination
+        currentPage={currentPage}
+        totalPages={totalPages}
+        onPageChange={(page: number) => setCurrentPage(page)}
+      />
+    </div>
+  ) : null;
 
-      {/* Form modal */}
-      {isModalOpen && (
-        <div className="fixed inset-0 bg-gray-500 bg-opacity-75 flex items-center justify-center p-4 z-50">
-          <div className="bg-white rounded-lg shadow-xl max-w-md w-full p-6">
-            <h2 className="text-lg font-medium text-gray-900 mb-4">
-              {isEditing ? 'Edit Category' : 'New Category'}
-            </h2>
+  return (
+    <div className="h-full animate-fadeIn">
+      <PageLayout
+        header={header}
+        content={content}
+        footer={footer}
+      />
 
-            <form onSubmit={handleSubmit} className="space-y-4">
-              <div>
-                <label htmlFor="name" className="block text-sm font-medium text-gray-700">
-                  Category Name
-                </label>
-                <input
-                  type="text"
-                  name="name"
-                  id="name"
-                  required
-                  value={currentCategory.name}
-                  onChange={handleInputChange}
-                  className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
-                />
-              </div>
+      {/* Category modal */}
+      <CategoryModal
+        isOpen={isModalOpen}
+        isEditing={isEditing}
+        category={currentCategory}
+        onClose={resetForm}
+        onSubmit={handleSubmit}
+        onChange={handleInputChange}
+        isLoading={createMutation.isPending || updateMutation.isPending}
+      />
 
-              <div>
-                <label htmlFor="description" className="block text-sm font-medium text-gray-700">
-                  Description (optional)
-                </label>
-                <textarea
-                  name="description"
-                  id="description"
-                  rows={3}
-                  value={currentCategory.description}
-                  onChange={handleInputChange}
-                  className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
-                />
-              </div>
+      {/* Confirm delete dialog */}
+      <ConfirmDialog
+        isOpen={isConfirmDialogOpen}
+        title="Delete Category"
+        message="Are you sure you want to delete this category? This action cannot be undone."
+        confirmText="Delete"
+        onConfirm={confirmDelete}
+        onCancel={cancelDelete}
+      />
 
-              <div className="flex justify-end space-x-3 pt-4">
-                <button
-                  type="button"
-                  onClick={resetForm}
-                  className="inline-flex justify-center py-2 px-4 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  className="inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-                >
-                  {isEditing ? 'Update' : 'Save'}
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
+      {/* Notification */}
+      <Notification
+        type={notification.type}
+        message={notification.message}
+        isVisible={notification.isVisible}
+        onClose={hideNotification}
+      />
     </div>
   );
 };

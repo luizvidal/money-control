@@ -17,13 +17,16 @@ import {
 } from 'chart.js';
 import { useEffect, useMemo, useState } from 'react';
 import { Line, Pie } from 'react-chartjs-2';
+import Pagination from '../components/common/Pagination';
 import ChartCard from '../components/dashboard/ChartCard';
 import DashboardHeader from '../components/dashboard/DashboardHeader';
 import LoadingSpinner from '../components/dashboard/LoadingSpinner';
 import SummaryCard from '../components/dashboard/SummaryCard';
-import TransactionsList from '../components/dashboard/TransactionsList';
+import TransactionItem from '../components/dashboard/TransactionItem';
+import PageLayout from '../components/Layout/PageLayout';
 import categoryService, { Category } from '../services/categoryService';
 import transactionService, { Transaction } from '../services/transactionService';
+import '../styles/animations.css';
 import { PageResponse } from '../types/PageResponse';
 
 // Register Chart.js components
@@ -55,6 +58,7 @@ const Dashboard = () => {
   const [currentPage, setCurrentPage] = useState(0);
   const [pageSize] = useState(5);
   const [totalPages, setTotalPages] = useState(0);
+  const [totalElements, setTotalElements] = useState(0);
   const [latestTransactions, setLatestTransactions] = useState<Transaction[]>([]);
 
   // Fetch transactions with pagination for latest transactions section
@@ -97,9 +101,11 @@ const Dashboard = () => {
         const pageData = transactionsData as PageResponse<Transaction>;
         setLatestTransactions(pageData.content);
         setTotalPages(pageData.totalPages);
+        setTotalElements(pageData.totalElements);
       } else {
         setLatestTransactions((transactionsData as Transaction[]).slice(0, pageSize));
         setTotalPages(1);
+        setTotalElements((transactionsData as Transaction[]).length);
       }
     }
   }, [transactionsData, pageSize]);
@@ -270,13 +276,19 @@ const Dashboard = () => {
     }
   };
 
-  return (
-    <div className="space-y-8 animate-fadeIn">
+  // Page header component
+  const header = (
+    <div className="p-6 pb-0">
       <DashboardHeader
         title="Financial Dashboard"
         subtitle="Overview of your financial activity"
       />
+    </div>
+  );
 
+  // Page content component
+  const content = (
+    <div className="p-6 pt-4 space-y-8">
       {/* Summary cards */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <SummaryCard
@@ -318,13 +330,47 @@ const Dashboard = () => {
         </ChartCard>
       </div>
 
-      {/* Latest transactions */}
-      <TransactionsList
-        title="Latest Transactions"
-        transactions={latestTransactions}
+      {/* Latest transactions (without pagination) */}
+      <div className="bg-white shadow-md rounded-lg overflow-hidden hover:shadow-lg transition-shadow duration-300">
+        <div className="px-4 py-5 sm:px-6 border-b border-gray-200">
+          <h2 className="text-lg font-medium text-gray-900">Latest Transactions</h2>
+        </div>
+
+        <ul className="divide-y divide-gray-200">
+          {latestTransactions && latestTransactions.length > 0 ? (
+            latestTransactions.map((transaction) => (
+              <TransactionItem key={transaction.id} transaction={transaction} />
+            ))
+          ) : (
+            <li className="px-4 py-8 text-center text-gray-500">
+              No transactions found
+            </li>
+          )}
+        </ul>
+      </div>
+    </div>
+  );
+
+  // Page footer with pagination
+  const footer = totalPages > 1 ? (
+    <div className="p-4">
+      <div className="flex justify-between items-center mb-2 text-sm text-gray-600">
+        <span>Showing {latestTransactions.length} of {totalElements} transactions</span>
+      </div>
+      <Pagination
         currentPage={currentPage}
         totalPages={totalPages}
-        onPageChange={(page) => setCurrentPage(page)}
+        onPageChange={(page: number) => setCurrentPage(page)}
+      />
+    </div>
+  ) : null;
+
+  return (
+    <div className="h-full animate-fadeIn">
+      <PageLayout
+        header={header}
+        content={content}
+        footer={footer}
       />
     </div>
   );

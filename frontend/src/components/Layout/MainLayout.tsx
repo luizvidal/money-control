@@ -82,7 +82,7 @@ const MainLayout = ({ children }: MainLayoutProps) => {
         <MobileHeader onOpenSidebar={handleOpenSidebar} />
 
         {/* Content */}
-        <main className="flex-1 relative overflow-y-auto focus:outline-none p-6 bg-gray-50">
+        <main className="flex-1 relative focus:outline-none bg-gray-50 overflow-hidden">
           {children}
         </main>
       </div>
