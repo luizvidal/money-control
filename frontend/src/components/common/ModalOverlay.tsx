@@ -29,7 +29,7 @@ const ModalOverlay = ({ isOpen, onClose, zIndex = 9998 }: ModalOverlayProps) => 
   return (
     <div
       className="modal-overlay"
-      style={{ 
+      style={{
         position: 'fixed',
         top: 0,
         left: 0,
@@ -37,7 +37,7 @@ const ModalOverlay = ({ isOpen, onClose, zIndex = 9998 }: ModalOverlayProps) => 
         bottom: 0,
         width: '100vw',
         height: '100vh',
-        backgroundColor: 'rgba(0, 0, 0, 0.5)',
+        backgroundColor: 'rgba(107, 114, 128, 0.5)', // Using gray-500 with 50% opacity
         zIndex
       }}
       onClick={onClose}
