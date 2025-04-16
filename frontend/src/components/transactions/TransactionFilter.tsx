@@ -78,14 +78,8 @@ const TransactionFilter = ({
 	const endInputRef = useRef<HTMLInputElement>(null);
 
 	// State for picker positions
-	const [startPickerPosition, setStartPickerPosition] = useState({
-		top: 0,
-		left: 0,
-	});
-	const [endPickerPosition, setEndPickerPosition] = useState({
-		top: 0,
-		left: 0,
-	});
+	const [startPickerPosition, setStartPickerPosition] = useState<{ top: number; left: number } | null>(null);
+	const [endPickerPosition, setEndPickerPosition] = useState<{ top: number; left: number } | null>(null);
 
 	// Handle click outside to close date pickers
 	useEffect(() => {
@@ -113,26 +107,36 @@ const TransactionFilter = ({
 		};
 	}, []);
 
-	// Update picker positions when visibility changes
-	useEffect(() => {
-		if (showStartDatePicker && startInputRef.current) {
-			const rect = startInputRef.current.getBoundingClientRect();
-			setStartPickerPosition({
-				top: rect.bottom + window.scrollY + 4,
-				left: rect.left + window.scrollX,
-			});
-		}
-	}, [showStartDatePicker]);
+	// Calculate picker position
+	const calculatePickerPosition = (inputRef: React.RefObject<HTMLInputElement | null>) => {
+		if (!inputRef.current) return null;
 
-	useEffect(() => {
-		if (showEndDatePicker && endInputRef.current) {
-			const rect = endInputRef.current.getBoundingClientRect();
-			setEndPickerPosition({
-				top: rect.bottom + window.scrollY + 4,
-				left: rect.left + window.scrollX,
-			});
+		const rect = inputRef.current.getBoundingClientRect();
+		return {
+			top: rect.bottom + window.scrollY + 4,
+			left: rect.left + window.scrollX
+		};
+	};
+
+	// Update start date picker position before showing it
+	const handleShowStartDatePicker = () => {
+		const position = calculatePickerPosition(startInputRef);
+		if (position) {
+			setStartPickerPosition(position);
+			setShowStartDatePicker(true);
+			setShowEndDatePicker(false);
 		}
-	}, [showEndDatePicker]);
+	};
+
+	// Update end date picker position before showing it
+	const handleShowEndDatePicker = () => {
+		const position = calculatePickerPosition(endInputRef);
+		if (position) {
+			setEndPickerPosition(position);
+			setShowEndDatePicker(true);
+			setShowStartDatePicker(false);
+		}
+	};
 
 	// Initialize date values from filters when component mounts
 	useEffect(() => {
@@ -270,6 +274,8 @@ const TransactionFilter = ({
 		setEndDateValue(null);
 		setShowStartDatePicker(false);
 		setShowEndDatePicker(false);
+		setStartPickerPosition(null);
+		setEndPickerPosition(null);
 
 		// Clear URL params
 		updateUrlParams({
@@ -462,13 +468,13 @@ const TransactionFilter = ({
 													  })
 													: ""
 											}
-											onClick={() => {
-												setShowStartDatePicker(true);
-												setShowEndDatePicker(false);
-											}}
+											onClick={handleShowStartDatePicker}
 											readOnly
 										/>
-										<div className="absolute inset-y-0 right-0 flex items-center pr-2 pointer-events-none">
+										<div
+											className="absolute inset-y-0 right-0 flex items-center pr-2 cursor-pointer"
+											onClick={handleShowStartDatePicker}
+										>
 											<CalendarIcon className="h-4 w-4 text-gray-400" />
 											<svg
 												className="h-4 w-4 text-gray-400 ml-1"
@@ -512,13 +518,13 @@ const TransactionFilter = ({
 													  })
 													: ""
 											}
-											onClick={() => {
-												setShowEndDatePicker(true);
-												setShowStartDatePicker(false);
-											}}
+											onClick={handleShowEndDatePicker}
 											readOnly
 										/>
-										<div className="absolute inset-y-0 right-0 flex items-center pr-2 pointer-events-none">
+										<div
+											className="absolute inset-y-0 right-0 flex items-center pr-2 cursor-pointer"
+											onClick={handleShowEndDatePicker}
+										>
 											<CalendarIcon className="h-4 w-4 text-gray-400" />
 											<svg
 												className="h-4 w-4 text-gray-400 ml-1"
@@ -546,7 +552,7 @@ const TransactionFilter = ({
 									</div>
 								</div>
 
-								{showStartDatePicker && (
+								{showStartDatePicker && startPickerPosition && (
 									<div
 										ref={startDatePickerRef}
 										style={{
@@ -575,7 +581,7 @@ const TransactionFilter = ({
 									</div>
 								)}
 
-								{showEndDatePicker && (
+								{showEndDatePicker && endPickerPosition && (
 									<div
 										ref={endDatePickerRef}
 										style={{
