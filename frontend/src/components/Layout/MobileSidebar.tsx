@@ -63,7 +63,10 @@ const MobileSidebar = ({ isOpen, onClose, navItems, userName, onLogout }: Mobile
           </div>
 
           <div className="mt-5">
-            <SidebarNavigation items={navItems} />
+            <SidebarNavigation
+              items={navItems}
+              onNavItemClick={onClose}
+            />
           </div>
         </div>
 

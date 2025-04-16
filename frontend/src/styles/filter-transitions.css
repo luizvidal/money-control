@@ -1,0 +1,17 @@
+/* Simple transitions for filter panel */
+.filter-panel {
+  max-height: 0;
+  overflow: hidden;
+  transition: max-height 0.3s ease-in-out, opacity 0.3s ease-in-out, padding 0.3s ease-in-out;
+  opacity: 0;
+  padding-top: 0;
+  padding-bottom: 0;
+  border-top-width: 0;
+}
+
+.filter-panel.expanded {
+  max-height: 1000px; /* Large enough to fit content */
+  opacity: 1;
+  padding: 0.75rem 1rem; /* py-3 px-4 */
+  border-top-width: 1px;
+}

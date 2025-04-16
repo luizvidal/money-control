@@ -9,9 +9,10 @@ export interface NavItem {
 
 interface SidebarNavigationProps {
   items: NavItem[];
+  onNavItemClick?: () => void;
 }
 
-const SidebarNavigation = ({ items }: SidebarNavigationProps) => {
+const SidebarNavigation = ({ items, onNavItemClick }: SidebarNavigationProps) => {
   return (
     <nav className="flex-1 px-2 py-4 space-y-1">
       {items.map((item) => (
@@ -20,6 +21,7 @@ const SidebarNavigation = ({ items }: SidebarNavigationProps) => {
           to={item.to}
           icon={item.icon}
           label={item.label}
+          onClick={onNavItemClick}
         />
       ))}
     </nav>

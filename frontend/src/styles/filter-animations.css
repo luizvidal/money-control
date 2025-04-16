@@ -1,0 +1,41 @@
+/* Filter animations */
+.filter-content-enter {
+  max-height: 0;
+  opacity: 0;
+  overflow: hidden;
+}
+
+.filter-content-enter-active {
+  max-height: 1000px;
+  opacity: 1;
+  transition: max-height 300ms ease-in-out, opacity 200ms ease-in-out;
+  overflow: hidden;
+}
+
+.filter-content-exit {
+  max-height: 1000px;
+  opacity: 1;
+  overflow: hidden;
+}
+
+.filter-content-exit-active {
+  max-height: 0;
+  opacity: 0;
+  transition: max-height 300ms ease-in-out, opacity 200ms ease-in-out;
+  overflow: hidden;
+}
+
+/* Smooth height transition for the filter container */
+.filter-container {
+  transition: all 300ms ease-in-out;
+}
+
+/* Subtle hover effect for filter badges */
+.filter-badge {
+  transition: all 150ms ease-in-out;
+}
+
+.filter-badge:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
