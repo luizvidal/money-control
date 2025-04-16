@@ -1,6 +1,5 @@
-import { XMarkIcon } from '@heroicons/react/24/outline';
-import { useEffect, useRef } from 'react';
-import { Category } from '../../services/categoryService';
+import { useRef } from 'react';
+import Modal from '../common/Modal';
 
 interface CategoryModalProps {
   isOpen: boolean;
@@ -25,73 +24,27 @@ const CategoryModal = ({
   onChange,
   isLoading = false
 }: CategoryModalProps) => {
-  const modalRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
-  // Focus the name input when the modal opens
-  useEffect(() => {
-    if (isOpen && inputRef.current) {
-      setTimeout(() => {
-        inputRef.current?.focus();
-      }, 100);
-    }
-  }, [isOpen]);
-
-  // Close modal when clicking outside
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (modalRef.current && !modalRef.current.contains(event.target as Node)) {
-        onClose();
-      }
-    };
-
-    if (isOpen) {
-      document.addEventListener('mousedown', handleClickOutside);
-    }
-
-    return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
-    };
-  }, [isOpen, onClose]);
-
-  // Handle escape key press
-  useEffect(() => {
-    const handleEscapeKey = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') {
-        onClose();
-      }
-    };
-
-    if (isOpen) {
-      document.addEventListener('keydown', handleEscapeKey);
-    }
-
-    return () => {
-      document.removeEventListener('keydown', handleEscapeKey);
-    };
-  }, [isOpen, onClose]);
+  // Focus the name input when the modal is rendered
+  const handleModalRendered = () => {
+    setTimeout(() => {
+      inputRef.current?.focus();
+    }, 100);
+  };
 
   if (!isOpen) return null;
 
+  // Call focus function when modal is rendered
+  handleModalRendered();
+
   return (
-    <div className="fixed inset-0 bg-gray-500 bg-opacity-75 flex items-center justify-center p-4 z-50 animate-fadeIn">
-      <div 
-        ref={modalRef}
-        className="bg-white rounded-lg shadow-xl max-w-md w-full p-6 relative"
-      >
-        <button
-          onClick={onClose}
-          className="absolute top-4 right-4 text-gray-400 hover:text-gray-500 transition-colors duration-150"
-          aria-label="Close modal"
-        >
-          <XMarkIcon className="h-5 w-5" />
-        </button>
-
-        <h2 className="text-lg font-medium text-gray-900 mb-4">
-          {isEditing ? 'Edit Category' : 'New Category'}
-        </h2>
-
-        <form onSubmit={onSubmit} className="space-y-4">
+    <Modal
+      isOpen={isOpen}
+      title={isEditing ? 'Edit Category' : 'New Category'}
+      onClose={onClose}
+    >
+      <form onSubmit={onSubmit} className="space-y-4">
           <div>
             <label htmlFor="name" className="block text-sm font-medium text-gray-700">
               Category Name
@@ -147,8 +100,7 @@ const CategoryModal = ({
             </button>
           </div>
         </form>
-      </div>
-    </div>
+    </Modal>
   );
 };
 

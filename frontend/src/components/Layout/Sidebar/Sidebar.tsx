@@ -1,4 +1,5 @@
 import { ReactNode } from 'react';
+import '../../../styles/z-index.css';
 import SidebarNavigation, { NavItem } from './SidebarNavigation';
 import SidebarUserProfile from './SidebarUserProfile';
 
@@ -11,7 +12,7 @@ interface SidebarProps {
 
 const Sidebar = ({ navItems, userName, onLogout, logo }: SidebarProps) => {
   return (
-    <div className="hidden md:flex md:w-64 md:flex-col relative z-10">
+    <div className="hidden md:flex md:w-64 md:flex-col relative" style={{ zIndex: 10 }}>
       <div className="flex flex-col flex-grow overflow-y-auto bg-white shadow-[1px_0_5px_0_rgba(0,0,0,0.05)]">
         <div className="flex items-center flex-shrink-0 px-4 py-5">
           {logo || (

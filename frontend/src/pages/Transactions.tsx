@@ -2,6 +2,7 @@ import { PencilIcon, PlusIcon, TrashIcon } from '@heroicons/react/24/outline';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useEffect, useState } from 'react';
 import ConfirmDialog from '../components/common/ConfirmDialog';
+import Modal from '../components/common/Modal';
 import Notification from '../components/common/Notification';
 import PageHeader from '../components/common/PageHeader';
 import Pagination from '../components/common/Pagination';
@@ -304,13 +305,12 @@ const Transactions = () => {
 
       {/* Form modal */}
       {isModalOpen && (
-        <div className="fixed inset-0 bg-gray-500 bg-opacity-75 flex items-center justify-center p-4 z-50">
-          <div className="bg-white rounded-lg shadow-xl max-w-md w-full p-6">
-            <h2 className="text-lg font-medium text-gray-900 mb-4">
-              {isEditing ? 'Edit Transaction' : 'New Transaction'}
-            </h2>
-
-            <form onSubmit={handleSubmit} className="space-y-4">
+        <Modal
+          isOpen={isModalOpen}
+          title={isEditing ? 'Edit Transaction' : 'New Transaction'}
+          onClose={resetForm}
+        >
+          <form onSubmit={handleSubmit} className="space-y-4">
               <div>
                 <label htmlFor="description" className="block text-sm font-medium text-gray-700">
                   Description
@@ -412,8 +412,7 @@ const Transactions = () => {
                 </button>
               </div>
             </form>
-          </div>
-        </div>
+        </Modal>
       )}
 
       {/* Confirm delete dialog */}
