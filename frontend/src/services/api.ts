@@ -1,7 +1,12 @@
 import axios from 'axios';
 
+// When running in Docker, the API is available at /api due to Nginx proxy
+// When running locally, use the localhost URL
+// We're now using port 5173 for both Docker and local development
+const isRunningInDocker = window.location.port === '5173' && window.location.hostname === 'localhost';
+
 const api = axios.create({
-  baseURL: 'http://localhost:8080/api',
+  baseURL: isRunningInDocker ? '/api' : 'http://localhost:8080/api',
 });
 
 // Interceptor para adicionar o token JWT em todas as requisições

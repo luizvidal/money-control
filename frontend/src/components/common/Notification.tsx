@@ -23,7 +23,7 @@ const Notification = ({
   duration = 3000
 }: NotificationProps) => {
   useEffect(() => {
-    let timer: NodeJS.Timeout;
+    let timer: ReturnType<typeof setTimeout>;
 
     if (isVisible && autoClose) {
       timer = setTimeout(() => {

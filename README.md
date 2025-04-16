@@ -7,7 +7,7 @@ Este projeto é um sistema de controle financeiro pessoal completo, com backend 
 O projeto está organizado da seguinte forma:
 
 - **backend/** - Contém a API RESTful desenvolvida com Spring Boot
-- **frontend/** - (Em desenvolvimento) Conterá a interface de usuário
+- **frontend/** - Interface de usuário desenvolvida com React e Tailwind CSS
 
 ## Backend
 
@@ -28,13 +28,15 @@ Para executar o projeto completo:
 docker-compose up -d
 ```
 
-### Acessando a API
+### Acessando a Aplicação
 
+- **Frontend**: http://localhost:5173
 - **API**: http://localhost:8080
 - **Documentação Swagger**: http://localhost:8080/swagger-ui.html
 
 ### Portas
 
+- **Frontend**: 5173
 - **Backend**: 8080
 - **PostgreSQL**: 5433 (mapeado para 5432 dentro do container)
 
@@ -49,9 +51,12 @@ cd backend
 ./mvnw spring-boot:run
 ```
 
-### Frontend (em desenvolvimento)
+### Frontend
 
 ```bash
 cd frontend
-# Comandos para executar o frontend
+npm install
+npm run dev
 ```
+
+O frontend estará disponível em http://localhost:5173
