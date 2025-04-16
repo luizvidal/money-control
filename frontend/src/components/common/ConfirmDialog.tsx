@@ -1,5 +1,5 @@
 import { ExclamationTriangleIcon } from '@heroicons/react/24/outline';
-import { useRef } from 'react';
+import { useEffect, useRef } from 'react';
 import Modal from './Modal';
 import ModalPortal from './ModalPortal';
 
@@ -25,6 +25,15 @@ const ConfirmDialog = ({
   onCancel
 }: ConfirmDialogProps) => {
   const cancelButtonRef = useRef<HTMLButtonElement>(null);
+
+  // Use useEffect to focus the cancel button when the dialog opens
+  useEffect(() => {
+    if (isOpen && cancelButtonRef.current) {
+      setTimeout(() => {
+        cancelButtonRef.current?.focus();
+      }, 50);
+    }
+  }, [isOpen]);
 
   return (
     <ModalPortal isOpen={isOpen}>

@@ -1,4 +1,4 @@
-import { useRef } from 'react';
+import { useEffect, useRef } from 'react';
 import Modal from '../common/Modal';
 
 interface CategoryModalProps {
@@ -26,17 +26,16 @@ const CategoryModal = ({
 }: CategoryModalProps) => {
   const inputRef = useRef<HTMLInputElement>(null);
 
-  // Focus the name input when the modal is rendered
-  const handleModalRendered = () => {
-    setTimeout(() => {
-      inputRef.current?.focus();
-    }, 100);
-  };
+  // Focus the name input when the modal is opened
+  useEffect(() => {
+    if (isOpen && inputRef.current) {
+      setTimeout(() => {
+        inputRef.current?.focus();
+      }, 100);
+    }
+  }, [isOpen]);
 
   if (!isOpen) return null;
-
-  // Call focus function when modal is rendered
-  handleModalRendered();
 
   return (
     <Modal
