@@ -12,20 +12,20 @@ const Pagination = ({ currentPage, totalPages, onPageChange }: PaginationProps) 
   const renderPageNumbers = () => {
     const pages = [];
     const maxPagesToShow = 5;
-    
+
     let startPage = Math.max(0, currentPage - Math.floor(maxPagesToShow / 2));
     let endPage = Math.min(totalPages - 1, startPage + maxPagesToShow - 1);
-    
+
     if (endPage - startPage + 1 < maxPagesToShow) {
       startPage = Math.max(0, endPage - maxPagesToShow + 1);
     }
-    
+
     for (let i = startPage; i <= endPage; i++) {
       pages.push(
         <button
           key={i}
           onClick={() => onPageChange(i)}
-          className={`relative inline-flex items-center px-4 py-2 text-sm font-semibold ${
+          className={`relative inline-flex items-center px-4 py-2 text-sm font-semibold cursor-pointer ${
             i === currentPage
               ? 'z-10 bg-blue-600 text-white focus:z-20 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600'
               : 'text-gray-900 ring-1 ring-inset ring-gray-300 hover:bg-gray-50 focus:z-20 focus:outline-offset-0'
@@ -35,7 +35,7 @@ const Pagination = ({ currentPage, totalPages, onPageChange }: PaginationProps) 
         </button>
       );
     }
-    
+
     return pages;
   };
 
@@ -45,7 +45,7 @@ const Pagination = ({ currentPage, totalPages, onPageChange }: PaginationProps) 
         <button
           onClick={() => onPageChange(Math.max(0, currentPage - 1))}
           disabled={currentPage === 0}
-          className={`relative inline-flex items-center rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium ${
+          className={`relative inline-flex items-center rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium cursor-pointer ${
             currentPage === 0 ? 'text-gray-300 cursor-not-allowed' : 'text-gray-700 hover:bg-gray-50'
           }`}
         >
@@ -54,7 +54,7 @@ const Pagination = ({ currentPage, totalPages, onPageChange }: PaginationProps) 
         <button
           onClick={() => onPageChange(Math.min(totalPages - 1, currentPage + 1))}
           disabled={currentPage === totalPages - 1}
-          className={`relative ml-3 inline-flex items-center rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium ${
+          className={`relative ml-3 inline-flex items-center rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium cursor-pointer ${
             currentPage === totalPages - 1 ? 'text-gray-300 cursor-not-allowed' : 'text-gray-700 hover:bg-gray-50'
           }`}
         >
@@ -73,7 +73,7 @@ const Pagination = ({ currentPage, totalPages, onPageChange }: PaginationProps) 
             <button
               onClick={() => onPageChange(Math.max(0, currentPage - 1))}
               disabled={currentPage === 0}
-              className={`relative inline-flex items-center rounded-l-md px-2 py-2 ${
+              className={`relative inline-flex items-center rounded-l-md px-2 py-2 cursor-pointer ${
                 currentPage === 0 ? 'text-gray-300 cursor-not-allowed' : 'text-gray-400 hover:bg-gray-50'
               }`}
             >
@@ -84,7 +84,7 @@ const Pagination = ({ currentPage, totalPages, onPageChange }: PaginationProps) 
             <button
               onClick={() => onPageChange(Math.min(totalPages - 1, currentPage + 1))}
               disabled={currentPage === totalPages - 1}
-              className={`relative inline-flex items-center rounded-r-md px-2 py-2 ${
+              className={`relative inline-flex items-center rounded-r-md px-2 py-2 cursor-pointer ${
                 currentPage === totalPages - 1 ? 'text-gray-300 cursor-not-allowed' : 'text-gray-400 hover:bg-gray-50'
               }`}
             >

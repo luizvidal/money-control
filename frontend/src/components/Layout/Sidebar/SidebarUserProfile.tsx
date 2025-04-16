@@ -9,12 +9,12 @@ const SidebarUserProfile = ({ userName, onLogout }: SidebarUserProfileProps) => 
   // Get initials from user name (up to 2 characters)
   const getInitials = (name: string) => {
     if (!name) return '';
-    
+
     const parts = name.split(' ').filter(Boolean);
     if (parts.length === 1) {
       return parts[0].charAt(0).toUpperCase();
     }
-    
+
     return `${parts[0].charAt(0)}${parts[parts.length - 1].charAt(0)}`.toUpperCase();
   };
 
@@ -32,7 +32,7 @@ const SidebarUserProfile = ({ userName, onLogout }: SidebarUserProfileProps) => 
           </p>
           <button
             onClick={onLogout}
-            className="mt-1 text-xs font-medium text-gray-500 hover:text-blue-600 flex items-center transition-colors duration-200 group"
+            className="mt-1 text-xs font-medium text-gray-500 hover:text-blue-600 flex items-center transition-colors duration-200 group cursor-pointer"
           >
             <ArrowRightStartOnRectangleIcon className="mr-1 h-4 w-4 group-hover:text-blue-600 transition-colors duration-200" />
             Logout

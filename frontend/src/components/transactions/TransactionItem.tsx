@@ -26,11 +26,11 @@ const TransactionItem = ({ transaction, categoryName, onEdit, onDelete }: Transa
         <div className="flex-1 min-w-0 pr-4">
           <div className="flex items-center">
             <div className={`${isIncome ? 'bg-green-100' : 'bg-red-100'} p-2 rounded-full mr-3`}>
-              <svg 
-                xmlns="http://www.w3.org/2000/svg" 
-                className={`h-5 w-5 ${isIncome ? 'text-green-600' : 'text-red-600'}`} 
-                fill="none" 
-                viewBox="0 0 24 24" 
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                className={`h-5 w-5 ${isIncome ? 'text-green-600' : 'text-red-600'}`}
+                fill="none"
+                viewBox="0 0 24 24"
                 stroke="currentColor"
               >
                 {isIncome ? (
@@ -57,7 +57,7 @@ const TransactionItem = ({ transaction, categoryName, onEdit, onDelete }: Transa
             </div>
           </div>
         </div>
-        
+
         <div className="flex items-center space-x-4">
           <span className={`px-3 py-1 inline-flex text-sm leading-5 font-semibold rounded-full ${amountBg} ${amountColor}`}>
             {amountSign} R$ {transaction.amount.toFixed(2)}
@@ -65,14 +65,14 @@ const TransactionItem = ({ transaction, categoryName, onEdit, onDelete }: Transa
           <div className="flex space-x-1">
             <button
               onClick={() => onEdit(transaction)}
-              className="text-gray-400 hover:text-blue-500 p-1 rounded-full hover:bg-blue-50 transition-colors duration-150"
+              className="text-gray-400 hover:text-blue-500 p-1 rounded-full hover:bg-blue-50 transition-colors duration-150 cursor-pointer"
               aria-label="Edit transaction"
             >
               <PencilIcon className="h-5 w-5" />
             </button>
             <button
               onClick={() => transaction.id && onDelete(transaction.id)}
-              className="text-gray-400 hover:text-red-500 p-1 rounded-full hover:bg-red-50 transition-colors duration-150"
+              className="text-gray-400 hover:text-red-500 p-1 rounded-full hover:bg-red-50 transition-colors duration-150 cursor-pointer"
               aria-label="Delete transaction"
             >
               <TrashIcon className="h-5 w-5" />

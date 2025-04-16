@@ -81,7 +81,7 @@ const Modal = ({
                   {showCloseButton && (
                     <button
                       type="button"
-                      className="text-gray-400 hover:text-gray-500 transition-colors duration-150"
+                      className="text-gray-400 hover:text-gray-500 transition-colors duration-150 cursor-pointer"
                       onClick={onClose}
                       aria-label="Close modal"
                     >
