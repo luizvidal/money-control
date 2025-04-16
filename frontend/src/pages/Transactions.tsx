@@ -1,6 +1,7 @@
 import { PlusIcon } from '@heroicons/react/24/outline';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useEffect, useState } from 'react';
+import { useLocation } from 'react-router-dom';
 import ConfirmDialog from '../components/common/ConfirmDialog';
 import Notification from '../components/common/Notification';
 import PageHeader from '../components/common/PageHeader';
@@ -10,9 +11,10 @@ import TransactionFilter, { TransactionFilterValues } from '../components/transa
 import TransactionList from '../components/transactions/TransactionList';
 import TransactionModal from '../components/transactions/TransactionModal';
 import categoryService from '../services/categoryService';
-import transactionService, { Transaction } from '../services/transactionService';
+import transactionService, { Transaction, TransactionParams } from '../services/transactionService';
 import '../styles/animations.css';
 import { PageResponse } from '../types/PageResponse';
+import { getUrlParams } from '../utils/urlParams';
 
 interface TransactionFormData {
   id?: number;
@@ -49,14 +51,33 @@ const Transactions = () => {
   const [totalElements, setTotalElements] = useState(0);
   const [paginatedTransactions, setPaginatedTransactions] = useState<Transaction[]>([]);
 
+  const location = useLocation();
+
+  // Initialize filters from URL params
+  const initializeFiltersFromUrl = (): TransactionFilterValues => {
+    const params = getUrlParams();
+    const urlFilters: TransactionFilterValues = {};
+
+    if (params.startDate) urlFilters.startDate = params.startDate;
+    if (params.endDate) urlFilters.endDate = params.endDate;
+    if (params.type && ['ALL', 'INCOME', 'EXPENSE'].includes(params.type)) {
+      urlFilters.type = params.type as 'ALL' | 'INCOME' | 'EXPENSE';
+    }
+    if (params.categoryId && !isNaN(Number(params.categoryId))) {
+      urlFilters.categoryId = Number(params.categoryId);
+    }
+
+    return urlFilters;
+  };
+
   // Filter state
-  const [filters, setFilters] = useState<TransactionFilterValues>({});
+  const [filters, setFilters] = useState<TransactionFilterValues>(initializeFiltersFromUrl);
 
   // Fetch transactions with pagination and filters
   const { data: transactionsData, isLoading: transactionsLoading, isFetching: transactionsFetching } = useQuery({
     queryKey: ['transactions', currentPage, pageSize, filters],
     queryFn: () => {
-      const params: Record<string, any> = {
+      const params: TransactionParams = {
         pageNo: currentPage,
         pageSize,
         sortBy: 'date',
@@ -88,6 +109,12 @@ const Transactions = () => {
       }
     }
   }, [transactionsData]);
+
+  // Listen for URL changes and update filters
+  useEffect(() => {
+    const urlFilters = initializeFiltersFromUrl();
+    setFilters(urlFilters);
+  }, [location.search]);
 
   // Fetch categories
   const { data: categoriesData, isLoading: categoriesLoading } = useQuery({
@@ -272,6 +299,7 @@ const Transactions = () => {
       <TransactionFilter
         categories={categories}
         onFilter={handleFilter}
+        initialFilters={filters}
       />
 
       {/* Transaction list */}

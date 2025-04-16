@@ -7,6 +7,12 @@
   padding-top: 0;
   padding-bottom: 0;
   border-top-width: 0;
+  position: relative; /* Ensure proper stacking context */
+}
+
+/* When the filter panel is expanded, we need to ensure the datepicker can overflow */
+.filter-panel.expanded .react-datepicker-wrapper {
+  position: static;
 }
 
 .filter-panel.expanded {
