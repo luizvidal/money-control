@@ -166,16 +166,26 @@ const Transactions = () => {
 
   const handleOpenModal = (transaction?: Transaction) => {
     if (transaction) {
+      // Get category ID from either the category object or the categoryId field
+      const categoryId = transaction.category?.id || transaction.categoryId || 0;
+
       setCurrentTransaction({
         id: transaction.id,
         description: transaction.description,
         amount: transaction.amount,
         date: new Date(transaction.date).toISOString().split('T')[0],
         type: transaction.type,
-        categoryId: transaction.categoryId
+        categoryId: categoryId
       });
       setIsEditing(true);
     } else {
+      // Check if we have categories available
+      if (categories.length === 0) {
+        // No categories available, show notification
+        showNotification('error', 'Please create a category first before adding a transaction.');
+        return;
+      }
+
       setCurrentTransaction({
         description: '',
         amount: 0,

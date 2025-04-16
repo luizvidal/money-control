@@ -158,29 +158,131 @@ const Dashboard = () => {
 
   // Process data for pie chart (expenses by category)
   const processCategoryData = (transactions: Transaction[], categories: Category[]) => {
+    console.log('Processing category data with:', {
+      transactionsCount: transactions.length,
+      categoriesCount: categories.length
+    });
+
+    // Log all categories and transactions for debugging
+    console.log('All categories:', JSON.stringify(categories, null, 2));
+    console.log('All transactions:', JSON.stringify(transactions.slice(0, 5), null, 2)); // Log first 5 transactions
+
+    // Get expense transactions for debugging
+    const debugExpenseTransactions = transactions.filter(t => t.type === 'EXPENSE');
+    console.log('Expense transactions:', JSON.stringify(debugExpenseTransactions.slice(0, 5), null, 2)); // Log first 5 expense transactions
+
+    // Log category IDs from transactions
+    const categoryIds = debugExpenseTransactions.map(t => t.categoryId);
+    console.log('Category IDs from expense transactions:', categoryIds);
+
+    // Log category IDs from categories
+    const availableCategoryIds = categories.map(c => c.id);
+    console.log('Available category IDs:', availableCategoryIds);
+
+    // If there are no transactions or categories, return empty data
+    if (transactions.length === 0 || categories.length === 0) {
+      console.log('No transactions or categories available');
+      setCategoryData({ labels: [], data: [], backgroundColor: [] });
+      return;
+    }
+
     const categoryMap = new Map<number, { total: number, name: string }>();
 
     // Initialize categories
     categories.forEach(category => {
-      if (category.id) {
-        categoryMap.set(category.id, { total: 0, name: category.name });
+      if (category.id !== undefined && category.id !== null) {
+        // Ensure category ID is a number
+        const categoryId = Number(category.id);
+        if (!isNaN(categoryId)) {
+          categoryMap.set(categoryId, { total: 0, name: category.name });
+          console.log(`Initialized category: ${category.name} with ID ${categoryId}`);
+        }
       }
     });
 
+    // Add an 'Unknown' category for transactions without a valid category
+    const unknownCategoryId = -1;
+    categoryMap.set(unknownCategoryId, { total: 0, name: 'Unknown' });
+
+    console.log('Initialized category map:', Array.from(categoryMap.entries()));
+
     // Sum expenses by category (only expenses)
-    transactions
-      .filter(transaction => transaction.type === 'EXPENSE')
-      .forEach(transaction => {
-        const categoryId = transaction.categoryId;
-        const category = categoryMap.get(categoryId);
+    const expenseTransactions = transactions.filter(transaction => transaction.type === 'EXPENSE');
+    console.log('Expense transactions count:', expenseTransactions.length);
+
+    // If there are no expense transactions, return empty data
+    if (expenseTransactions.length === 0) {
+      console.log('No expense transactions found');
+      setCategoryData({ labels: [], data: [], backgroundColor: [] });
+      return;
+    }
+
+    // Create a map of category IDs to names for quick lookup
+    const categoryIdToName = new Map<number, string>();
+    categories.forEach(category => {
+      if (category.id !== undefined && category.id !== null) {
+        categoryIdToName.set(category.id, category.name);
+        console.log(`Added category ID ${category.id} to lookup map`);
+      }
+    });
+
+    // Log the category ID to name map
+    console.log('Category ID to name map:', Object.fromEntries(categoryIdToName));
+
+    expenseTransactions.forEach(transaction => {
+      // Get category ID from either the category object or the categoryId field
+      let categoryId = transaction.categoryId;
+      let categoryName = '';
+
+      // Check if transaction has a category object
+      if (transaction.category && transaction.category.id) {
+        categoryId = transaction.category.id;
+        categoryName = transaction.category.name;
+        console.log(`Transaction has category object with ID ${categoryId} and name ${categoryName}`);
+      }
+
+      console.log(`Processing transaction with category ID: ${categoryId}`);
+
+      // Check if this category ID exists in our categories
+      // Convert to number to ensure proper comparison
+      const categoryIdNumber = Number(categoryId);
+
+      if (!isNaN(categoryIdNumber) && (categoryIdToName.has(categoryIdNumber) || categoryName)) {
+        // If we have a category name from the transaction object, use that
+        if (!categoryName && categoryIdToName.has(categoryIdNumber)) {
+          categoryName = categoryIdToName.get(categoryIdNumber) || '';
+        }
+
+        console.log(`Found matching category for ID ${categoryIdNumber}: ${categoryName}`);
+        const category = categoryMap.get(categoryIdNumber);
 
         if (category) {
-          categoryMap.set(categoryId, {
+          categoryMap.set(categoryIdNumber, {
             ...category,
             total: category.total + transaction.amount
           });
+          console.log(`Added ${transaction.amount} to category ${category.name}, new total: ${category.total + transaction.amount}`);
+        } else if (categoryName) {
+          // If we have a category name but no entry in the map, create one
+          categoryMap.set(categoryIdNumber, {
+            name: categoryName,
+            total: transaction.amount
+          });
+          console.log(`Created new category entry for ${categoryName} with amount ${transaction.amount}`);
         }
-      });
+      } else {
+        console.log(`Category not found for transaction with ID ${categoryId}:`, transaction);
+        // Add to the 'Unknown' category
+        const unknownCategory = categoryMap.get(unknownCategoryId)!;
+        categoryMap.set(unknownCategoryId, {
+          ...unknownCategory,
+          total: unknownCategory.total + transaction.amount
+        });
+        console.log(`Added ${transaction.amount} to Unknown category, new total: ${unknownCategory.total + transaction.amount}`);
+      }
+    });
+
+    console.log('Category map after summing expenses:', Array.from(categoryMap.entries()));
 
     // Generate random colors for categories
     const generateColors = (count: number) => {
@@ -197,9 +299,31 @@ const Dashboard = () => {
       .filter(([, data]) => data.total > 0)
       .sort((a, b) => b[1].total - a[1].total);
 
+    console.log('Filtered category entries with expenses:', categoryEntries);
+
+    // If there are no categories with expenses, return empty data
+    if (categoryEntries.length === 0) {
+      console.log('No categories with expenses found');
+      setCategoryData({ labels: [], data: [], backgroundColor: [] });
+      return;
+    }
+
+    // Check if we only have the 'Unknown' category
+    if (categoryEntries.length === 1 && categoryEntries[0][0] === unknownCategoryId) {
+      console.log('Only Unknown category found. Checking if we have categories available...');
+
+      // If we have categories but all transactions are 'Unknown', show a message
+      if (categories.length > 0) {
+        console.log('Categories exist but no transactions are using them');
+        // We'll still show the Unknown category in this case
+      }
+    }
+
     const labels = categoryEntries.map(([, data]) => data.name);
     const data = categoryEntries.map(([, data]) => data.total);
     const backgroundColor = generateColors(labels.length);
+
+    console.log('Final chart data:', { labels, data, backgroundColor });
 
     setCategoryData({ labels, data, backgroundColor });
   };
@@ -317,7 +441,12 @@ const Dashboard = () => {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <ChartCard
           title="Expenses by Category"
-          hasData={categoryData.data.length > 0}
+          hasData={categoryData.data.length > 0 && !(categoryData.labels.length === 1 && categoryData.labels[0] === 'Unknown')}
+          emptyMessage={
+            categoryData.labels.length === 1 && categoryData.labels[0] === 'Unknown' ?
+            "Your transactions aren't assigned to specific categories. Please update your transactions with valid categories." :
+            "No expense transactions found. Add some expenses to see the chart."
+          }
         >
           <Pie data={pieChartData} options={chartOptions} />
         </ChartCard>
@@ -325,6 +454,7 @@ const Dashboard = () => {
         <ChartCard
           title="Monthly Evolution"
           hasData={monthlyData.labels.length > 0}
+          emptyMessage="No transactions found. Add some transactions to see the chart."
         >
           <Line data={lineChartData} options={chartOptions} />
         </ChartCard>

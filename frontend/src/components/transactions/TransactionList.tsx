@@ -24,8 +24,28 @@ const TransactionList = ({
   onEdit,
   onDelete
 }: TransactionListProps) => {
-  const getCategoryName = (categoryId: number) => {
-    return categories?.find(c => c.id === categoryId)?.name || 'Uncategorized';
+  const getCategoryName = (transaction: Transaction) => {
+    // First, check if the transaction has a category object
+    if (transaction.category && transaction.category.name) {
+      return transaction.category.name;
+    }
+
+    // Fallback to the old categoryId approach if category object is not present
+    if (transaction.categoryId) {
+      // Convert categoryId to number to ensure proper comparison
+      const categoryIdNumber = Number(transaction.categoryId);
+
+      // Find the category with matching ID
+      const category = categories?.find(c => {
+        // Convert category ID to number for comparison
+        const cId = Number(c.id);
+        return !isNaN(cId) && cId === categoryIdNumber;
+      });
+
+      return category?.name || 'Uncategorized';
+    }
+
+    return 'Uncategorized';
   };
 
   return (
@@ -37,7 +57,7 @@ const TransactionList = ({
               <TransactionItem
                 key={transaction.id}
                 transaction={transaction}
-                categoryName={getCategoryName(transaction.categoryId)}
+                categoryName={getCategoryName(transaction)}
                 onEdit={onEdit}
                 onDelete={onDelete}
               />

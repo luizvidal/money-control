@@ -7,7 +7,12 @@ export interface Transaction {
   amount: number;
   date: string;
   type: 'INCOME' | 'EXPENSE';
-  categoryId: number;
+  categoryId?: number; // Keep for backward compatibility
+  category?: {
+    id: number;
+    name: string;
+    description?: string;
+  };
 }
 
 export interface TransactionParams {
@@ -86,8 +91,19 @@ const transactionService = {
     // Format date to include time for LocalDateTime compatibility
     const formattedTransaction = {
       ...transaction,
-      date: transaction.date ? `${transaction.date}T00:00:00` : null
+      date: transaction.date ? `${transaction.date}T00:00:00` : null,
+      // If we have a categoryId but no category object, create a minimal category object
+      category: transaction.category || (transaction.categoryId ? { id: transaction.categoryId } : undefined)
     };
+
+    // Remove the categoryId field as the API now expects a category object
+    if (formattedTransaction.categoryId && !formattedTransaction.category) {
+      formattedTransaction.category = { id: formattedTransaction.categoryId };
+    }
+
+    // Log the transaction being sent to the API
+    console.log('Creating transaction:', formattedTransaction);
+
     const response = await api.post<Transaction>('/transactions', formattedTransaction);
     return response.data;
   },
@@ -96,8 +112,19 @@ const transactionService = {
     // Format date to include time for LocalDateTime compatibility
     const formattedTransaction = {
       ...transaction,
-      date: transaction.date ? `${transaction.date}T00:00:00` : null
+      date: transaction.date ? `${transaction.date}T00:00:00` : null,
+      // If we have a categoryId but no category object, create a minimal category object
+      category: transaction.category || (transaction.categoryId ? { id: transaction.categoryId } : undefined)
     };
+
+    // Remove the categoryId field as the API now expects a category object
+    if (formattedTransaction.categoryId && !formattedTransaction.category) {
+      formattedTransaction.category = { id: formattedTransaction.categoryId };
+    }
+
+    // Log the transaction being sent to the API
+    console.log('Updating transaction:', formattedTransaction);
+
     const response = await api.put<Transaction>(`/transactions/${id}`, formattedTransaction);
     return response.data;
   },
